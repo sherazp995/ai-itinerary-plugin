@@ -1,0 +1,26 @@
+.ai-widget {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+}
+
+.ai-widget-btn {
+    background: #0073aa;
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 50px;
+    cursor: pointer;
+}
+
+.ai-widget-box {
+    display: none;
+    width: 300px;
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+}
+
+.ai-widget-btn:hover + .ai-widget-box,
+.ai-widget-box:hover {
+    display: block;
+}
