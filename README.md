@@ -1,292 +1,240 @@
-# AI Travel Itinerary Generator Plugin
+# AI Travel Itinerary Generator
 
-A WordPress plugin that uses OpenAI's GPT API to generate personalized travel itineraries with free and premium modes, PDF export, and multiple interface options.
+A comprehensive WordPress plugin that generates AI-powered travel itineraries with premium features, payment integration, and affiliate support.
 
 ## Features
 
-✨ **Core Features**
-- 🤖 AI-powered itinerary generation using OpenAI GPT-3.5/GPT-4
-- 💬 Chat and Form-based interfaces
-- 🎨 Multiple PDF export styles (minimal, modern, image-heavy)
-- 💾 Save itineraries to database
-- 🌍 Multilingual support (default: English)
-- 🎯 Floating or embedded widget on any page
+### Core Features
+- **AI-Powered Itinerary Generation** using OpenAI (GPT-3.5 Turbo for free, GPT-4 for premium)
+- **Dual Interface Options**: Chat interface and/or Form interface
+- **Free & Premium Tiers**: Configurable free itinerary limits with paid premium upgrades
+- **PDF Export**: Generate downloadable PDFs with customizable styling (Minimal, Modern, Luxury)
+- **Multilingual Support**: English, Spanish, French, German, Italian, Portuguese
 
-💰 **Pricing & Access Control**
-- Free mode with limited prompts (configurable, default: 3 per 24 hours)
-- Premium mode with unlimited access
-- WooCommerce integration for premium purchases
-- Guest user support with optional save restriction
-- User-based prompt counting and tracking
+### Payment Integration
+- **Stripe Integration**: Full Stripe payment support
+- **PayPal Integration**: PayPal checkout option
+- **Flexible Payment Options**: Choose Stripe, PayPal, or both
+- **Account Requirements**: Optional account requirement before purchase
 
-🔒 **Security & UX**
-- Nonce verification on all AJAX requests
-- Per-user/per-session prompt rate limiting
-- Optional warning on unsaved changes
-- Input sanitization and validation
-- Ownership verification for saved itineraries
+### User Authentication
+- **Standard Registration**: Email/password signup with first name, last name
+- **Google Sign-In**: OAuth integration for quick authentication
+- **Guest Mode**: Limited features for non-registered users
+
+### Affiliate Integration
+- **Booking.com**: Hotel booking affiliate links
+- **Skyscanner**: Flight search affiliate links
+- **GetYourGuide**: Activity booking affiliate links
+- **Link Display Options**: Hidden integration or visible buttons
+
+### Admin Panel
+- **Dashboard**: Overview with statistics and charts
+- **Analytics**: Daily itinerary creation and revenue tracking
+- **Revenue Charts**: Visual representation of earnings
+- **Comprehensive Settings**:
+  - General settings (API keys, limits, pricing)
+  - Payment configuration
+  - Affiliate IDs
+  - Authentication settings
+  - Branding customization
+
+### User Experience
+- **Floating Widget**: Always accessible chat/form widget
+- **Warning System**: Alerts before closing unsaved itineraries
+- **Save Functionality**: Registered users can save itineraries
+- **Friendly AI Tone**: Configurable tone (Friendly, Professional, Casual)
 
 ## Installation
 
-1. **Download and Activate**
-   - Place the `ai-itinerary-plugin` folder in `/wp-content/plugins/`
-   - Go to WordPress Admin → Plugins
-   - Find "AI Travel Itinerary Generator" and click Activate
-
-2. **Configure OpenAI API**
-   - Go to WordPress Admin → **AI Itinerary** (left menu)
-   - Enter your OpenAI API key (get one at https://platform.openai.com/api-keys)
-   - Adjust free prompt limit (default: 3)
-   - Set premium price if using WooCommerce
-
-3. **Add Widget to Your Site**
-   - Create or edit a page
-   - Add this shortcode:
-     ```
-     [ai_itinerary_widget]
-     ```
-   - Publish the page
-   - The "Plan trip" button will appear
+1. Upload the `ai-itinerary-plugin` folder to `/wp-content/plugins/`
+2. Activate the plugin through the 'Plugins' menu in WordPress
+3. Go to **AI Itinerary > Settings** to configure the plugin
 
 ## Configuration
 
-### Admin Settings Panel
+### Required Settings
 
-**Basic Settings**
-- **OpenAI API Key**: Your API key from OpenAI
-- **Free User Prompts**: Max prompts per 24h for free users (default: 3)
-- **Premium Price**: Price for premium access (if using WooCommerce)
+1. **OpenAI API Key** (Required)
+   - Get your API key from [OpenAI Platform](https://platform.openai.com/api-keys)
+   - Enter in: AI Itinerary > Settings > General
 
-**Output Settings**
-- **PDF Style**: Choose format (minimal, modern, image-heavy)
-- **Output Language**: Language for AI responses (ISO code, e.g., `en`)
-- **Widget Style**: Display as floating button or embedded
-- **Interface Type**: Chat or form-based input
+2. **Payment Method** (Required for premium features)
+   - **Stripe**:
+     - Get keys from [Stripe Dashboard](https://dashboard.stripe.com/apikeys)
+     - Enter Publishable Key and Secret Key
+   - **PayPal**:
+     - Get credentials from [PayPal Developer](https://developer.paypal.com/)
+     - Enter Client ID and Client Secret
 
-**Access Control**
-- **Allow Guest Save**: Let non-logged-in users save itineraries
-- **WooCommerce Integration**: Enable premium purchases via WooCommerce
-- **Warn on Close**: Show warning if unsaved itinerary exists
-- **Enable Shortcode**: Allow `[ai_itinerary_widget]` on pages
+### Optional Settings
 
-## AJAX Endpoints
+3. **Google OAuth** (Optional)
+   - Enable Google Sign-In for users
+   - Get credentials from [Google Cloud Console](https://console.cloud.google.com/)
+   - Enter Client ID and Client Secret
 
-All endpoints require a valid nonce. Responses are JSON.
+4. **Affiliate IDs** (Optional)
+   - Enter your affiliate IDs for Booking.com, Skyscanner, and GetYourGuide
+   - Choose between hidden or visible affiliate link display
 
-### Generate Itinerary
+5. **Branding** (Optional)
+   - Customize primary and secondary colors
+   - Add your logo URL
+   - Personalize the look and feel
+
+## Usage
+
+### For Site Visitors
+
+1. **Access the Widget**: Click the floating button in the bottom-right corner
+2. **Sign Up or Continue as Guest**: Register for full features or use limited guest mode
+3. **Generate Itinerary**:
+   - **Chat Mode**: Describe your trip naturally
+   - **Form Mode**: Fill in destination, days, dates, preferences
+4. **Choose Tier**: Select free (basic) or premium (detailed) itinerary
+5. **Download PDF**: Export your itinerary as a styled PDF
+6. **Save**: Registered users can save itineraries for later
+
+### Using the Shortcode
+
+Add the widget to any page using:
 ```
-POST /wp-admin/admin-ajax.php?action=ai_generate_itinerary
-```
-
-**Parameters:**
-- `destination` (string, required): Travel destination
-- `days` (int, optional, default: 1): Number of days
-- `language` (string, optional): ISO language code
-- `style` (string, optional): PDF style preference
-- `nonce` (string, required): Nonce from `aiItinerary.nonce`
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "itinerary": "Day 1: ...",
-    "destination": "Paris",
-    "days": 3,
-    "language": "en"
-  }
-}
-```
-
-### Save Itinerary
-```
-POST /wp-admin/admin-ajax.php?action=ai_save_itinerary
+[ai_itinerary]
 ```
 
-**Parameters:**
-- `title` (string): Itinerary title
-- `data` (JSON string): Itinerary data object
-- `nonce` (string, required): Nonce
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "message": "Itinerary saved successfully",
-    "id": 123
-  }
-}
+Optional attributes:
+```
+[ai_itinerary style="chat"]
+[ai_itinerary style="form"]
+[ai_itinerary style="both"]
 ```
 
-### Check Prompt Count
-```
-POST /wp-admin/admin-ajax.php?action=ai_check_prompt_count
-```
+## Premium Features
 
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "can_use": true,
-    "current_count": 1,
-    "limit": 3,
-    "remaining": 2
-  }
-}
-```
+Premium itineraries include:
+- More detailed recommendations
+- Specific hotel suggestions with price ranges
+- Restaurant recommendations
+- Activity timing suggestions
+- Transportation options
+- Budget breakdown
+- Booking recommendations
+- Cultural insights
 
-## Database Schema
+## Admin Dashboard
 
-### `wp_ai_itineraries` Table
-```sql
-id              - Primary key, auto-increment
-user_id         - WordPress user ID (NULL for guests)
-title           - Itinerary title
-data            - Serialized itinerary data
-created_at      - Timestamp
-updated_at      - Timestamp
-```
+### Analytics Tracking
+- Total itineraries generated
+- Free vs Premium breakdown
+- Revenue tracking
+- Daily statistics
+- User registration analytics
 
-## Prompt Counting
+### Revenue Charts
+- Daily revenue visualization
+- Itinerary creation trends
+- User activity monitoring
 
-### For Logged-in Users
-- Count stored in `user_meta` with key `ai_prompt_count`
-- Persists across sessions
-- Admins can manually reset via user profile or database
+## Technical Details
 
-### For Guest Users
-- Count stored in transient (expires in 24 hours)
-- Tied to `ai_guest_session` cookie
-- Resets daily automatically
-
-## WooCommerce Integration
-
-1. **Create a Premium Product**
-   - Go to WooCommerce → Products → Add Product
-   - Name it "AI Itinerary Premium"
-   - Set a price
-   - Save the product ID
-
-2. **Link Product to Plugin**
-   - Go to AI Itinerary settings
-   - Note the product ID
-   - It will be auto-detected after first purchase
-
-3. **Premium Unlock**
-   - After a customer completes an order with the premium product:
-     - User gets `unlimited` prompts
-     - Can save unlimited itineraries
-     - Access all PDF styles
-
-## Troubleshooting
-
-### Widget doesn't appear
-- [ ] Confirm plugin is activated (Admin → Plugins)
-- [ ] Confirm shortcode `[ai_itinerary_widget]` is in page content
-- [ ] Hard refresh browser (Ctrl+Shift+R)
-- [ ] Check browser console for JavaScript errors
-
-### "API request failed" error
-- [ ] Verify OpenAI API key is set (Admin → AI Itinerary)
-- [ ] Confirm API key is valid (test at https://platform.openai.com)
-- [ ] Check OpenAI account has available credits
-- [ ] Verify server can make outbound HTTPS requests
-
-### Prompts not counting down
-- [ ] Check browser console for nonce errors
-- [ ] Confirm WordPress debug mode is off (can interfere with AJAX)
-- [ ] Clear browser cache and try again
-- [ ] For guests: ensure cookies are enabled
-
-### PDF Download not working
-- [ ] PDF generation not yet fully implemented (stub for now)
-- [ ] Will be available in next update
-
-## Development
+### Database Tables
+- `wp_aip_itineraries`: Stores generated itineraries
+- `wp_aip_user_meta`: Extended user information and limits
+- `wp_aip_payments`: Payment transaction records
+- `wp_aip_analytics`: Event tracking and analytics
 
 ### File Structure
 ```
 ai-itinerary-plugin/
-├── ai-itinerary-plugin.php         # Main plugin file
-├── uninstall.php                   # Cleanup on uninstall
+├── ai-itinerary-plugin.php (Main plugin file)
 ├── includes/
-│   ├── class-ai-loader.php        # Loader/bootstrapper
-│   ├── class-ai-admin.php         # Admin settings page
-│   ├── class-ai-frontend.php      # Frontend widget & shortcode
-│   ├── class-ai-api.php           # AJAX endpoints
-│   ├── class-ai-database.php      # Database operations
-│   └── class-ai-pdf.php           # PDF generation (stub)
+│   ├── class-aip-database.php
+│   ├── class-aip-admin.php
+│   ├── class-aip-frontend.php
+│   ├── class-aip-api.php
+│   ├── class-aip-pdf.php
+│   ├── class-aip-payment.php
+│   ├── class-aip-auth.php
+│   └── class-aip-affiliate.php
 ├── assets/
-│   ├── css/frontend.css           # Widget styles
-│   └── js/frontend.js             # Widget JavaScript
-└── templates/
-    └── widget.php                 # Widget template (legacy)
+│   ├── css/
+│   │   ├── frontend.css
+│   │   └── admin.css
+│   └── js/
+│       ├── frontend.js
+│       └── admin.js
+└── README.md
 ```
 
-### Extending the Plugin
+### Security Features
+- Nonce verification for all AJAX requests
+- Data sanitization and validation
+- SQL injection prevention with prepared statements
+- XSS protection
+- Direct file access prevention
 
-**Add a custom PDF style:**
-```php
-// In includes/class-ai-pdf.php
-public function generate($itinerary_data, $style = 'minimal') {
-    if ($style === 'my-custom-style') {
-        // Custom PDF generation logic
-    }
-}
-```
+## Requirements
 
-**Add a new language:**
-- Update admin settings to include language option
-- Pass language to OpenAI in prompt
+- WordPress 5.8 or higher
+- PHP 7.4 or higher
+- OpenAI API account
+- Stripe and/or PayPal account (for premium features)
 
-**Add payment integration:**
-- Extend `AI_Api::is_premium_user()` to check your payment system
-- Update `AI_Api::increment_prompt_count()` for premium users
+## Support & Customization
 
-## API Costs
+### Customization Options
+- Modify CSS in `assets/css/frontend.css` for styling
+- Adjust JavaScript behavior in `assets/js/frontend.js`
+- Customize PDF templates in `class-aip-pdf.php`
+- Modify AI prompts in `class-aip-api.php`
 
-- **GPT-3.5-turbo**: ~$0.002 per 1K tokens (very cheap)
-- **GPT-4**: ~$0.03 per 1K tokens (more expensive, better quality)
-- Average itinerary generation: 800-1500 tokens (~$0.002-0.005 per request)
+### Common Customizations
+1. **Change color scheme**: Admin Panel > Branding
+2. **Modify free limits**: Admin Panel > General Settings
+3. **Adjust pricing**: Admin Panel > General Settings
+4. **Customize AI tone**: Admin Panel > General Settings
 
-## FAQ
+## Troubleshooting
 
-**Q: Can I use this with GPT-4?**
-A: Yes! Open `includes/class-ai-api.php` and change `"model" => "gpt-3.5-turbo"` to `"model" => "gpt-4"`
+### Plugin won't activate
+- Check PHP version (7.4+)
+- Verify WordPress version (5.8+)
+- Check for PHP syntax errors in logs
 
-**Q: How do I reset a user's prompt count?**
-A: In WordPress, go to Users → Edit User → Scroll to plugin section and reset count. Or via database:
-```sql
-DELETE FROM wp_usermeta WHERE meta_key='ai_prompt_count' AND user_id=123;
-```
+### OpenAI API not working
+- Verify API key is correct
+- Check API key has credits
+- Review error logs in WordPress
 
-**Q: Can guests save itineraries permanently?**
-A: By default, guest saves are allowed but only persist in the current session. To save across sessions, user must log in.
+### Payment not processing
+- Verify API keys are correct
+- Check Stripe/PayPal dashboard for errors
+- Ensure webhook URLs are configured (if using webhooks)
 
-**Q: How do I customize the widget appearance?**
-A: Edit `assets/css/frontend.css` to change colors, sizes, and layout. Reactivate plugin to clear cache.
-
-## Support & Contributing
-
-For issues, feature requests, or contributions:
-- Check the troubleshooting section above
-- Review your OpenAI API settings
-- Ensure WordPress is up to date
-- Check plugin activity log in WordPress
-
-## License
-
-This plugin is provided as-is for use in WordPress.
+### Google Sign-In not working
+- Verify Client ID and Secret
+- Check authorized redirect URIs in Google Console
+- Ensure Google Sign-In library is loading
 
 ## Changelog
 
-### v1.0.0 - Initial Release
-- Core AI itinerary generation
-- Free/Premium modes with prompt limiting
-- Save itineraries to database
-- Chat and form interfaces
-- Multiple PDF styles (stub)
-- WooCommerce integration ready
+### Version 1.0.0
+- Initial release
+- AI-powered itinerary generation
+- Free and premium tiers
+- Payment integration (Stripe & PayPal)
+- Google OAuth authentication
+- Affiliate link integration
+- PDF export
+- Admin dashboard with analytics
 - Multilingual support
+
+## License
+
+GPL v2 or later
+
+## Credits
+
+Created with ❤️ for travel enthusiasts worldwide.
+
