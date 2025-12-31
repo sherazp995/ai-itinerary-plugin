@@ -25,6 +25,10 @@ class AIP_Admin {
         add_action('admin_menu', array($this, 'add_admin_menu'));
         add_action('admin_init', array($this, 'register_settings'));
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_assets'));
+        
+        // AJAX handlers for affiliate provider management
+        add_action('wp_ajax_aip_save_affiliate_provider', array($this, 'ajax_save_affiliate_provider'));
+        add_action('wp_ajax_aip_delete_affiliate_provider', array($this, 'ajax_delete_affiliate_provider'));
     }
     
     /**
@@ -67,6 +71,15 @@ class AIP_Admin {
             'aip-analytics',
             array($this, 'render_analytics')
         );
+        
+        add_submenu_page(
+            'aip-dashboard',
+            __('Affiliate Providers', 'ai-itinerary-plugin'),
+            __('Affiliate Providers', 'ai-itinerary-plugin'),
+            'manage_options',
+            'aip-affiliate-providers',
+            array($this, 'render_affiliate_providers')
+        );
     }
     
     /**
@@ -84,6 +97,7 @@ class AIP_Admin {
         register_setting('aip_general', 'aip_require_account');
         register_setting('aip_general', 'aip_save_itineraries');
         register_setting('aip_general', 'aip_warn_before_close');
+        register_setting('aip_general', 'aip_bot_name'); // Bot identity
         
         // Payment Settings
         register_setting('aip_payment', 'aip_payment_method');
@@ -91,6 +105,7 @@ class AIP_Admin {
         register_setting('aip_payment', 'aip_stripe_secret_key');
         register_setting('aip_payment', 'aip_paypal_client_id');
         register_setting('aip_payment', 'aip_paypal_client_secret');
+        register_setting('aip_payment', 'aip_paypal_mode'); // Sandbox or Production
         register_setting('aip_payment', 'aip_currency');
         
         // Affiliate Settings
@@ -328,6 +343,13 @@ class AIP_Admin {
                 </td>
             </tr>
             <tr>
+                <th scope="row"><label for="aip_bot_name"><?php _e('Bot Name', 'ai-itinerary-plugin'); ?></label></th>
+                <td>
+                    <input type="text" name="aip_bot_name" id="aip_bot_name" value="<?php echo esc_attr(get_option('aip_bot_name', 'Travel Buddy')); ?>" class="regular-text">
+                    <p class="description"><?php _e('The name of your AI travel assistant (e.g., "Travel Buddy", "Journey Guide", etc.)', 'ai-itinerary-plugin'); ?></p>
+                </td>
+            </tr>
+            <tr>
                 <th scope="row"><?php _e('Options', 'ai-itinerary-plugin'); ?></th>
                 <td>
                     <label><input type="checkbox" name="aip_require_account" value="yes" <?php checked(get_option('aip_require_account', 'yes'), 'yes'); ?>> <?php _e('Require account before purchase', 'ai-itinerary-plugin'); ?></label><br>
@@ -389,33 +411,36 @@ class AIP_Admin {
                 <th scope="row"><label for="aip_paypal_client_secret"><?php _e('PayPal Client Secret', 'ai-itinerary-plugin'); ?></label></th>
                 <td><input type="password" name="aip_paypal_client_secret" id="aip_paypal_client_secret" value="<?php echo esc_attr(get_option('aip_paypal_client_secret')); ?>" class="regular-text"></td>
             </tr>
+            <tr>
+                <th scope="row"><label for="aip_paypal_mode"><?php _e('PayPal Mode', 'ai-itinerary-plugin'); ?></label></th>
+                <td>
+                    <select name="aip_paypal_mode" id="aip_paypal_mode">
+                        <option value="sandbox" <?php selected(get_option('aip_paypal_mode', 'sandbox'), 'sandbox'); ?>><?php _e('Sandbox (Test)', 'ai-itinerary-plugin'); ?></option>
+                        <option value="production" <?php selected(get_option('aip_paypal_mode', 'sandbox'), 'production'); ?>><?php _e('Production (Live)', 'ai-itinerary-plugin'); ?></option>
+                    </select>
+                    <p class="description"><?php _e('Use Sandbox for testing, Production for live transactions', 'ai-itinerary-plugin'); ?></p>
+                </td>
+            </tr>
         </table>
         <?php submit_button(); ?>
         <?php
     }
     
     /**
-     * Render affiliate settings
+     * Render affiliate settings (deprecated - kept for backward compatibility)
      */
     private function render_affiliate_settings() {
-        settings_fields('aip_affiliate');
         ?>
+        <div class="notice notice-info">
+            <p><?php _e('Affiliate settings have been moved to a dedicated page for better management.', 'ai-itinerary-plugin'); ?></p>
+            <p><a href="<?php echo admin_url('admin.php?page=aip-affiliate-providers'); ?>" class="button button-primary"><?php _e('Manage Affiliate Providers', 'ai-itinerary-plugin'); ?></a></p>
+        </div>
+        
         <table class="form-table">
-            <tr>
-                <th scope="row"><label for="aip_booking_affiliate_id"><?php _e('Booking.com Affiliate ID', 'ai-itinerary-plugin'); ?></label></th>
-                <td><input type="text" name="aip_booking_affiliate_id" id="aip_booking_affiliate_id" value="<?php echo esc_attr(get_option('aip_booking_affiliate_id')); ?>" class="regular-text"></td>
-            </tr>
-            <tr>
-                <th scope="row"><label for="aip_skyscanner_affiliate_id"><?php _e('Skyscanner Affiliate ID', 'ai-itinerary-plugin'); ?></label></th>
-                <td><input type="text" name="aip_skyscanner_affiliate_id" id="aip_skyscanner_affiliate_id" value="<?php echo esc_attr(get_option('aip_skyscanner_affiliate_id')); ?>" class="regular-text"></td>
-            </tr>
-            <tr>
-                <th scope="row"><label for="aip_getyourguide_affiliate_id"><?php _e('GetYourGuide Affiliate ID', 'ai-itinerary-plugin'); ?></label></th>
-                <td><input type="text" name="aip_getyourguide_affiliate_id" id="aip_getyourguide_affiliate_id" value="<?php echo esc_attr(get_option('aip_getyourguide_affiliate_id')); ?>" class="regular-text"></td>
-            </tr>
             <tr>
                 <th scope="row"><label for="aip_affiliate_button_style"><?php _e('Button Style', 'ai-itinerary-plugin'); ?></label></th>
                 <td>
+                    <?php settings_fields('aip_affiliate'); ?>
                     <select name="aip_affiliate_button_style" id="aip_affiliate_button_style">
                         <option value="hidden" <?php selected(get_option('aip_affiliate_button_style', 'hidden'), 'hidden'); ?>>Hidden Links</option>
                         <option value="visible" <?php selected(get_option('aip_affiliate_button_style'), 'visible'); ?>>Visible Buttons</option>
@@ -511,6 +536,252 @@ class AIP_Admin {
             </div>
         </div>
         <?php
+    }
+    
+    /**
+     * Render affiliate providers management page
+     */
+    public function render_affiliate_providers() {
+        // Handle form submission
+        if (isset($_POST['aip_save_provider']) && check_admin_referer('aip_affiliate_provider_action', 'aip_affiliate_provider_nonce')) {
+            $provider_data = array(
+                'id' => isset($_POST['provider_id']) ? absint($_POST['provider_id']) : 0,
+                'name' => sanitize_text_field($_POST['provider_name']),
+                'slug' => sanitize_title($_POST['provider_slug']),
+                'api_base_url' => esc_url_raw($_POST['api_base_url']),
+                'affiliate_id' => sanitize_text_field($_POST['affiliate_id']),
+                'link_template' => sanitize_text_field($_POST['link_template']),
+                'category' => sanitize_text_field($_POST['category']),
+                'label' => sanitize_text_field($_POST['label']),
+                'icon' => sanitize_text_field($_POST['icon']),
+                'is_active' => isset($_POST['is_active']) ? 1 : 0,
+                'sort_order' => absint($_POST['sort_order']),
+            );
+            
+            $result = AIP_Database::save_affiliate_provider($provider_data);
+            
+            if ($result) {
+                echo '<div class="notice notice-success is-dismissible"><p>' . __('Affiliate provider saved successfully!', 'ai-itinerary-plugin') . '</p></div>';
+            } else {
+                echo '<div class="notice notice-error is-dismissible"><p>' . __('Failed to save affiliate provider.', 'ai-itinerary-plugin') . '</p></div>';
+            }
+        }
+        
+        // Handle delete
+        if (isset($_GET['action']) && $_GET['action'] === 'delete' && isset($_GET['provider_id']) && check_admin_referer('delete_provider_' . $_GET['provider_id'])) {
+            AIP_Database::delete_affiliate_provider(absint($_GET['provider_id']));
+            echo '<div class="notice notice-success is-dismissible"><p>' . __('Affiliate provider deleted.', 'ai-itinerary-plugin') . '</p></div>';
+        }
+        
+        // Get all providers
+        $providers = AIP_Database::get_all_affiliate_providers();
+        $editing_provider = null;
+        
+        // Check if editing
+        if (isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['provider_id'])) {
+            $provider_id = absint($_GET['provider_id']);
+            foreach ($providers as $provider) {
+                if ($provider->id == $provider_id) {
+                    $editing_provider = $provider;
+                    break;
+                }
+            }
+        }
+        ?>
+        <div class="wrap">
+            <h1><?php _e('Affiliate Providers', 'ai-itinerary-plugin'); ?></h1>
+            
+            <div class="aip-affiliate-info">
+                <p><?php _e('Manage your affiliate integrations. The system is platform-agnostic - you can add any affiliate provider by configuring the link template with placeholder variables.', 'ai-itinerary-plugin'); ?></p>
+                <p><strong><?php _e('Available placeholders:', 'ai-itinerary-plugin'); ?></strong> <code>{affiliate_id}</code>, <code>{destination}</code>, <code>{destination_slug}</code>, <code>{check_in}</code>, <code>{check_out}</code>, <code>{destination_iata}</code>, <code>{origin}</code></p>
+            </div>
+            
+            <hr>
+            
+            <h2><?php echo $editing_provider ? __('Edit Provider', 'ai-itinerary-plugin') : __('Add New Provider', 'ai-itinerary-plugin'); ?></h2>
+            
+            <form method="post" action="">
+                <?php wp_nonce_field('aip_affiliate_provider_action', 'aip_affiliate_provider_nonce'); ?>
+                
+                <?php if ($editing_provider): ?>
+                    <input type="hidden" name="provider_id" value="<?php echo esc_attr($editing_provider->id); ?>">
+                <?php endif; ?>
+                
+                <table class="form-table">
+                    <tr>
+                        <th scope="row"><label for="provider_name"><?php _e('Provider Name', 'ai-itinerary-plugin'); ?> *</label></th>
+                        <td><input type="text" name="provider_name" id="provider_name" class="regular-text" value="<?php echo $editing_provider ? esc_attr($editing_provider->name) : ''; ?>" required></td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="provider_slug"><?php _e('Slug', 'ai-itinerary-plugin'); ?> *</label></th>
+                        <td>
+                            <input type="text" name="provider_slug" id="provider_slug" class="regular-text" value="<?php echo $editing_provider ? esc_attr($editing_provider->slug) : ''; ?>" required>
+                            <p class="description"><?php _e('Unique identifier (e.g., travelpayouts-hotels)', 'ai-itinerary-plugin'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="api_base_url"><?php _e('API Base URL', 'ai-itinerary-plugin'); ?></label></th>
+                        <td>
+                            <input type="url" name="api_base_url" id="api_base_url" class="regular-text" value="<?php echo $editing_provider ? esc_attr($editing_provider->api_base_url) : ''; ?>">
+                            <p class="description"><?php _e('Optional: Base URL for API (if applicable)', 'ai-itinerary-plugin'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="affiliate_id"><?php _e('Affiliate/Tracking ID', 'ai-itinerary-plugin'); ?></label></th>
+                        <td>
+                            <input type="text" name="affiliate_id" id="affiliate_id" class="regular-text" value="<?php echo $editing_provider ? esc_attr($editing_provider->affiliate_id) : ''; ?>">
+                            <p class="description"><?php _e('Your affiliate ID or tracking code', 'ai-itinerary-plugin'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="link_template"><?php _e('Link Template', 'ai-itinerary-plugin'); ?> *</label></th>
+                        <td>
+                            <textarea name="link_template" id="link_template" class="large-text" rows="3" required><?php echo $editing_provider ? esc_textarea($editing_provider->link_template) : ''; ?></textarea>
+                            <p class="description"><?php _e('Use placeholders like {affiliate_id}, {destination}, etc.', 'ai-itinerary-plugin'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="category"><?php _e('Category', 'ai-itinerary-plugin'); ?> *</label></th>
+                        <td>
+                            <select name="category" id="category" required>
+                                <option value="hotels" <?php echo $editing_provider && $editing_provider->category === 'hotels' ? 'selected' : ''; ?>><?php _e('Hotels', 'ai-itinerary-plugin'); ?></option>
+                                <option value="flights" <?php echo $editing_provider && $editing_provider->category === 'flights' ? 'selected' : ''; ?>><?php _e('Flights', 'ai-itinerary-plugin'); ?></option>
+                                <option value="cars" <?php echo $editing_provider && $editing_provider->category === 'cars' ? 'selected' : ''; ?>><?php _e('Car Rentals', 'ai-itinerary-plugin'); ?></option>
+                                <option value="activities" <?php echo $editing_provider && $editing_provider->category === 'activities' ? 'selected' : ''; ?>><?php _e('Activities', 'ai-itinerary-plugin'); ?></option>
+                                <option value="other" <?php echo $editing_provider && $editing_provider->category === 'other' ? 'selected' : ''; ?>><?php _e('Other', 'ai-itinerary-plugin'); ?></option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="label"><?php _e('Button Label', 'ai-itinerary-plugin'); ?> *</label></th>
+                        <td><input type="text" name="label" id="label" class="regular-text" value="<?php echo $editing_provider ? esc_attr($editing_provider->label) : ''; ?>" required></td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="icon"><?php _e('Icon (emoji or text)', 'ai-itinerary-plugin'); ?></label></th>
+                        <td><input type="text" name="icon" id="icon" class="regular-text" value="<?php echo $editing_provider ? esc_attr($editing_provider->icon) : '🔗'; ?>"></td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="sort_order"><?php _e('Sort Order', 'ai-itinerary-plugin'); ?></label></th>
+                        <td><input type="number" name="sort_order" id="sort_order" value="<?php echo $editing_provider ? esc_attr($editing_provider->sort_order) : '100'; ?>" min="0"></td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><?php _e('Active', 'ai-itinerary-plugin'); ?></th>
+                        <td>
+                            <label>
+                                <input type="checkbox" name="is_active" value="1" <?php echo $editing_provider && $editing_provider->is_active ? 'checked' : ''; ?>>
+                                <?php _e('Enable this provider', 'ai-itinerary-plugin'); ?>
+                            </label>
+                        </td>
+                    </tr>
+                </table>
+                
+                <p class="submit">
+                    <button type="submit" name="aip_save_provider" class="button button-primary"><?php echo $editing_provider ? __('Update Provider', 'ai-itinerary-plugin') : __('Add Provider', 'ai-itinerary-plugin'); ?></button>
+                    <?php if ($editing_provider): ?>
+                        <a href="<?php echo admin_url('admin.php?page=aip-affiliate-providers'); ?>" class="button"><?php _e('Cancel', 'ai-itinerary-plugin'); ?></a>
+                    <?php endif; ?>
+                </p>
+            </form>
+            
+            <hr>
+            
+            <h2><?php _e('Existing Providers', 'ai-itinerary-plugin'); ?></h2>
+            
+            <table class="wp-list-table widefat fixed striped">
+                <thead>
+                    <tr>
+                        <th><?php _e('Name', 'ai-itinerary-plugin'); ?></th>
+                        <th><?php _e('Slug', 'ai-itinerary-plugin'); ?></th>
+                        <th><?php _e('Category', 'ai-itinerary-plugin'); ?></th>
+                        <th><?php _e('Affiliate ID', 'ai-itinerary-plugin'); ?></th>
+                        <th><?php _e('Status', 'ai-itinerary-plugin'); ?></th>
+                        <th><?php _e('Sort', 'ai-itinerary-plugin'); ?></th>
+                        <th><?php _e('Actions', 'ai-itinerary-plugin'); ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (empty($providers)): ?>
+                        <tr>
+                            <td colspan="7"><?php _e('No affiliate providers found.', 'ai-itinerary-plugin'); ?></td>
+                        </tr>
+                    <?php else: ?>
+                        <?php foreach ($providers as $provider): ?>
+                            <tr>
+                                <td>
+                                    <strong><?php echo esc_html($provider->name); ?></strong>
+                                    <?php if ($provider->icon): ?>
+                                        <span><?php echo esc_html($provider->icon); ?></span>
+                                    <?php endif; ?>
+                                </td>
+                                <td><code><?php echo esc_html($provider->slug); ?></code></td>
+                                <td><?php echo esc_html(ucfirst($provider->category)); ?></td>
+                                <td><?php echo $provider->affiliate_id ? '<span class="dashicons dashicons-yes-alt" style="color: green;"></span>' : '<span class="dashicons dashicons-warning" style="color: orange;"></span>'; ?></td>
+                                <td><?php echo $provider->is_active ? '<span style="color: green;">' . __('Active', 'ai-itinerary-plugin') . '</span>' : '<span style="color: gray;">' . __('Inactive', 'ai-itinerary-plugin') . '</span>'; ?></td>
+                                <td><?php echo esc_html($provider->sort_order); ?></td>
+                                <td>
+                                    <a href="<?php echo admin_url('admin.php?page=aip-affiliate-providers&action=edit&provider_id=' . $provider->id); ?>" class="button button-small"><?php _e('Edit', 'ai-itinerary-plugin'); ?></a>
+                                    <a href="<?php echo wp_nonce_url(admin_url('admin.php?page=aip-affiliate-providers&action=delete&provider_id=' . $provider->id), 'delete_provider_' . $provider->id); ?>" class="button button-small" onclick="return confirm('<?php _e('Are you sure you want to delete this provider?', 'ai-itinerary-plugin'); ?>');"><?php _e('Delete', 'ai-itinerary-plugin'); ?></a>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+        <?php
+    }
+    
+    /**
+     * AJAX handler to save affiliate provider
+     */
+    public function ajax_save_affiliate_provider() {
+        check_ajax_referer('aip_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => __('Insufficient permissions', 'ai-itinerary-plugin')));
+        }
+        
+        $provider_data = array(
+            'id' => isset($_POST['id']) ? absint($_POST['id']) : 0,
+            'name' => sanitize_text_field($_POST['name']),
+            'slug' => sanitize_title($_POST['slug']),
+            'api_base_url' => esc_url_raw($_POST['api_base_url']),
+            'affiliate_id' => sanitize_text_field($_POST['affiliate_id']),
+            'link_template' => sanitize_text_field($_POST['link_template']),
+            'category' => sanitize_text_field($_POST['category']),
+            'label' => sanitize_text_field($_POST['label']),
+            'icon' => sanitize_text_field($_POST['icon']),
+            'is_active' => isset($_POST['is_active']) ? 1 : 0,
+            'sort_order' => absint($_POST['sort_order']),
+        );
+        
+        $result = AIP_Database::save_affiliate_provider($provider_data);
+        
+        if ($result) {
+            wp_send_json_success(array('message' => __('Provider saved successfully', 'ai-itinerary-plugin')));
+        } else {
+            wp_send_json_error(array('message' => __('Failed to save provider', 'ai-itinerary-plugin')));
+        }
+    }
+    
+    /**
+     * AJAX handler to delete affiliate provider
+     */
+    public function ajax_delete_affiliate_provider() {
+        check_ajax_referer('aip_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => __('Insufficient permissions', 'ai-itinerary-plugin')));
+        }
+        
+        $provider_id = absint($_POST['provider_id']);
+        $result = AIP_Database::delete_affiliate_provider($provider_id);
+        
+        if ($result) {
+            wp_send_json_success(array('message' => __('Provider deleted successfully', 'ai-itinerary-plugin')));
+        } else {
+            wp_send_json_error(array('message' => __('Failed to delete provider', 'ai-itinerary-plugin')));
+        }
     }
 }
 

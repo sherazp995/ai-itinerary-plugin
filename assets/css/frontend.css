@@ -434,11 +434,20 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 10000;
+    z-index: 999999;
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+.aip-payment-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 1;
 }
 
 .aip-payment-content {
@@ -447,28 +456,124 @@
     border-radius: 12px;
     max-width: 500px;
     width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    z-index: 2;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.aip-payment-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: none;
+    border: none;
+    font-size: 28px;
+    cursor: pointer;
+    color: #666;
+    line-height: 1;
+    padding: 5px 10px;
+}
+
+.aip-payment-close:hover {
+    color: #000;
 }
 
 .aip-payment-content h3 {
     margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 22px;
+}
+
+.aip-payment-amount {
+    font-size: 18px;
+    font-weight: bold;
+    color: #2271b1;
+    margin-bottom: 20px;
+}
+
+/* Payment method tabs */
+.aip-payment-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.aip-payment-tab {
+    flex: 1;
+    padding: 12px;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 500;
+    color: #666;
+    transition: all 0.3s;
+    margin-bottom: -2px;
+}
+
+.aip-payment-tab:hover {
+    color: #2271b1;
+}
+
+.aip-payment-tab.active {
+    color: #2271b1;
+    border-bottom-color: #2271b1;
+}
+
+/* Payment method containers */
+.aip-payment-method-container {
+    min-height: 200px;
 }
 
 #aip-payment-element {
     margin: 20px 0;
+    min-height: 150px;
+}
+
+#aip-paypal-button-container {
+    margin: 20px 0;
+    min-height: 150px;
+}
+
+.aip-payment-loading {
+    text-align: center;
+    padding: 20px;
+    color: #666;
+    font-style: italic;
+}
+
+.aip-payment-loading:before {
+    content: "";
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #2271b1;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-right: 10px;
+    vertical-align: middle;
 }
 
 .aip-payment-buttons {
     display: flex;
     gap: 10px;
+    margin-top: 20px;
 }
 
 .aip-payment-buttons button {
     flex: 1;
-    padding: 12px;
+    padding: 12px 20px;
     border: none;
     border-radius: 6px;
     cursor: pointer;
+    font-size: 16px;
     font-weight: 600;
+    transition: all 0.3s;
 }
 
 .aip-btn-pay {
@@ -476,8 +581,156 @@
     color: white;
 }
 
+.aip-btn-pay:hover:not(:disabled) {
+    background: #135e96;
+    transform: translateY(-1px);
+}
+
+.aip-btn-pay:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
 .aip-btn-cancel {
-    background: #ddd;
+    background: #f0f0f0;
+    color: #333;
+}
+
+.aip-btn-cancel:hover {
+    background: #e0e0e0;
+}
+
+.aip-payment-security {
+    text-align: center;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.aip-payment-security small {
+    color: #666;
+    font-size: 13px;
+}
+
+/* Generate options buttons (from conversation) */
+.aip-generate-options {
+    display: flex;
+    gap: 10px;
+    margin: 15px 0;
+    padding: 15px;
+    background: #f9f9f9;
+    border-radius: 8px;
+}
+
+.aip-btn-generate-free,
+.aip-btn-generate-premium {
+    flex: 1;
+    padding: 15px 20px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+
+.aip-btn-generate-free {
+    background: #2271b1;
+    color: white;
+}
+
+.aip-btn-generate-free:hover {
+    background: #135e96;
+    transform: translateY(-2px);
+}
+
+.aip-btn-generate-premium {
+    background: #d4af37;
+    color: white;
+}
+
+.aip-btn-generate-premium:hover {
+    background: #b8941f;
+    transform: translateY(-2px);
+}
+
+.aip-btn-secondary {
+    background: #d4af37;
+    color: white;
+}
+
+/* Custom Notification Modal (replaces browser alerts) */
+.aip-notification {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 99999999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.aip-notification-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+}
+
+.aip-notification-content {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    max-width: 400px;
+    width: 90%;
+    position: relative;
+    z-index: 2;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.aip-notification-message {
+    font-size: 16px;
+    line-height: 1.6;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.aip-notification-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.aip-notification-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+
+.aip-notification-ok {
+    background: #2271b1;
+    color: white;
+}
+
+.aip-notification-ok:hover {
+    background: #135e96;
+}
+
+.aip-notification-cancel {
+    background: #f0f0f0;
+    color: #333;
+}
+
+.aip-notification-cancel:hover {
+    background: #e0e0e0;
 }
 
 /* Responsive */

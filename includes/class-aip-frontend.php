@@ -68,6 +68,7 @@ class AIP_Frontend {
             'primary_color' => get_option('aip_primary_color', '#2271b1'),
             'secondary_color' => get_option('aip_secondary_color', '#135e96'),
             'google_client_id' => get_option('aip_google_client_id'),
+            'bot_name' => get_option('aip_bot_name', 'Travel Buddy'),
             'texts' => array(
                 'generating' => __('Generating your itinerary...', 'ai-itinerary-plugin'),
                 'error' => __('An error occurred. Please try again.', 'ai-itinerary-plugin'),
@@ -106,6 +107,7 @@ class AIP_Frontend {
     private function render_widget_html($style, $embedded = false) {
         $current_user = wp_get_current_user();
         $primary_color = get_option('aip_primary_color', '#2271b1');
+        $bot_name = get_option('aip_bot_name', 'Travel Buddy');
         ?>
         <div class="aip-widget-container <?php echo $embedded ? 'embedded' : 'floating'; ?>" 
              data-style="<?php echo esc_attr($style); ?>">
@@ -122,7 +124,7 @@ class AIP_Frontend {
             <!-- Widget panel -->
             <div class="aip-widget-panel" style="<?php echo $embedded ? 'display: block;' : ''; ?>">
                 <div class="aip-widget-header" style="background-color: <?php echo esc_attr($primary_color); ?>;">
-                    <h3><?php _e('AI Travel Planner', 'ai-itinerary-plugin'); ?></h3>
+                    <h3><?php echo esc_html($bot_name); ?></h3>
                     <?php if (!$embedded): ?>
                     <button class="aip-close-btn">&times;</button>
                     <?php endif; ?>
@@ -194,11 +196,11 @@ class AIP_Frontend {
                         <div class="aip-chat-interface">
                             <div class="aip-chat-messages">
                                 <div class="aip-message bot">
-                                    <?php _e("Hi! I'm your AI travel assistant. Where would you like to go?", 'ai-itinerary-plugin'); ?>
+                                    <?php printf(__("Hi! I'm %s, your AI travel assistant. 🌍 Which country would you like to visit?", 'ai-itinerary-plugin'), esc_html($bot_name)); ?>
                                 </div>
                             </div>
                             <div class="aip-chat-input">
-                                <input type="text" class="aip-chat-field" placeholder="<?php esc_attr_e('Tell me about your trip...', 'ai-itinerary-plugin'); ?>">
+                                <input type="text" class="aip-chat-field" placeholder="<?php esc_attr_e('Type your answer...', 'ai-itinerary-plugin'); ?>">
                                 <button class="aip-send-btn" style="background-color: <?php echo esc_attr($primary_color); ?>;">
                                     <?php _e('Send', 'ai-itinerary-plugin'); ?>
                                 </button>
@@ -269,15 +271,43 @@ class AIP_Frontend {
                     
                     <!-- Payment modal -->
                     <div class="aip-payment-modal" style="display: none;">
+                        <div class="aip-payment-overlay"></div>
                         <div class="aip-payment-content">
+                            <button class="aip-payment-close">&times;</button>
                             <h3><?php _e('Premium Itinerary Payment', 'ai-itinerary-plugin'); ?></h3>
-                            <p><?php printf(__('Amount: %s %s', 'ai-itinerary-plugin'), get_option('aip_currency', 'USD'), get_option('aip_premium_price', 5.00)); ?></p>
+                            <p class="aip-payment-amount"><?php printf(__('Amount: %s %s', 'ai-itinerary-plugin'), get_option('aip_currency', 'USD'), get_option('aip_premium_price', 5.00)); ?></p>
                             
-                            <div id="aip-payment-element"></div>
+                            <?php 
+                            $payment_method = get_option('aip_payment_method', 'stripe');
                             
-                            <div class="aip-payment-buttons">
-                                <button class="aip-btn-pay" style="background-color: <?php echo esc_attr($primary_color); ?>;"><?php _e('Pay Now', 'ai-itinerary-plugin'); ?></button>
-                                <button class="aip-btn-cancel"><?php _e('Cancel', 'ai-itinerary-plugin'); ?></button>
+                            if ($payment_method === 'both'): ?>
+                                <!-- Payment method tabs -->
+                                <div class="aip-payment-tabs">
+                                    <button class="aip-payment-tab active" data-method="stripe"><?php _e('Credit Card', 'ai-itinerary-plugin'); ?></button>
+                                    <button class="aip-payment-tab" data-method="paypal"><?php _e('PayPal', 'ai-itinerary-plugin'); ?></button>
+                                </div>
+                            <?php endif; ?>
+                            
+                            <!-- Stripe payment container -->
+                            <div id="aip-stripe-container" class="aip-payment-method-container" style="<?php echo ($payment_method === 'paypal') ? 'display: none;' : ''; ?>">
+                                <div id="aip-payment-element"></div>
+                                <div class="aip-payment-buttons">
+                                    <button class="aip-btn-pay" style="background-color: <?php echo esc_attr($primary_color); ?>;"><?php _e('Pay Now', 'ai-itinerary-plugin'); ?></button>
+                                    <button class="aip-btn-cancel"><?php _e('Cancel', 'ai-itinerary-plugin'); ?></button>
+                                </div>
+                            </div>
+                            
+                            <!-- PayPal payment container -->
+                            <div id="aip-paypal-container" class="aip-payment-method-container" style="<?php echo ($payment_method === 'stripe') ? 'display: none;' : ''; ?>">
+                                <div id="aip-paypal-button-container"></div>
+                                <div class="aip-payment-buttons">
+                                    <button class="aip-btn-cancel"><?php _e('Cancel', 'ai-itinerary-plugin'); ?></button>
+                                </div>
+                            </div>
+                            
+                            <!-- Secure payment badges -->
+                            <div class="aip-payment-security">
+                                <small><?php _e('🔒 Secure payment processing', 'ai-itinerary-plugin'); ?></small>
                             </div>
                         </div>
                     </div>

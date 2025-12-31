@@ -80,6 +80,7 @@ class AIP_Payment {
         if (isset($body['client_secret'])) {
             wp_send_json_success(array(
                 'client_secret' => $body['client_secret'],
+                'payment_intent_id' => $body['id'],
                 'publishable_key' => get_option('aip_stripe_public_key'),
             ));
         } else {
@@ -180,13 +181,19 @@ class AIP_Payment {
         
         $client_id = get_option('aip_paypal_client_id');
         $client_secret = get_option('aip_paypal_client_secret');
+        $paypal_mode = get_option('aip_paypal_mode', 'sandbox');
+        
+        // Determine API base URL based on mode
+        $api_base = ($paypal_mode === 'production') 
+            ? 'https://api-m.paypal.com' 
+            : 'https://api-m.sandbox.paypal.com';
         
         if (empty($client_id) || empty($client_secret)) {
             wp_send_json_error(array('message' => __('PayPal not configured', 'ai-itinerary-plugin')));
         }
         
         // Get access token
-        $auth_response = wp_remote_post('https://api-m.paypal.com/v1/oauth2/token', array(
+        $auth_response = wp_remote_post($api_base . '/v1/oauth2/token', array(
             'headers' => array(
                 'Authorization' => 'Basic ' . base64_encode($client_id . ':' . $client_secret),
                 'Content-Type' => 'application/x-www-form-urlencoded',
@@ -195,6 +202,7 @@ class AIP_Payment {
         ));
         
         if (is_wp_error($auth_response)) {
+            error_log('PayPal Auth Error (WP_Error): ' . $auth_response->get_error_message());
             wp_send_json_error(array('message' => __('PayPal authentication failed', 'ai-itinerary-plugin')));
         }
         
@@ -202,11 +210,13 @@ class AIP_Payment {
         $access_token = $auth_body['access_token'] ?? '';
         
         if (empty($access_token)) {
+            error_log('PayPal Auth Error: No access token. Response: ' . print_r($auth_body, true));
+            error_log('PayPal Mode: ' . $paypal_mode . ', API Base: ' . $api_base);
             wp_send_json_error(array('message' => __('PayPal authentication failed', 'ai-itinerary-plugin')));
         }
         
         // Create order
-        $order_response = wp_remote_post('https://api-m.paypal.com/v2/checkout/orders', array(
+        $order_response = wp_remote_post($api_base . '/v2/checkout/orders', array(
             'headers' => array(
                 'Authorization' => 'Bearer ' . $access_token,
                 'Content-Type' => 'application/json',
@@ -226,6 +236,7 @@ class AIP_Payment {
         ));
         
         if (is_wp_error($order_response)) {
+            error_log('PayPal Order Error (WP_Error): ' . $order_response->get_error_message());
             wp_send_json_error(array('message' => __('PayPal order creation failed', 'ai-itinerary-plugin')));
         }
         
@@ -237,7 +248,7 @@ class AIP_Payment {
                 'client_id' => $client_id,
             ));
         } else {
-            error_log('PayPal Error: ' . print_r($order_body, true));
+            error_log('PayPal Order Error: ' . print_r($order_body, true));
             wp_send_json_error(array('message' => __('PayPal order creation failed', 'ai-itinerary-plugin')));
         }
     }
@@ -258,9 +269,15 @@ class AIP_Payment {
         
         $client_id = get_option('aip_paypal_client_id');
         $client_secret = get_option('aip_paypal_client_secret');
+        $paypal_mode = get_option('aip_paypal_mode', 'sandbox');
+        
+        // Determine API base URL based on mode
+        $api_base = ($paypal_mode === 'production') 
+            ? 'https://api-m.paypal.com' 
+            : 'https://api-m.sandbox.paypal.com';
         
         // Get access token
-        $auth_response = wp_remote_post('https://api-m.paypal.com/v1/oauth2/token', array(
+        $auth_response = wp_remote_post($api_base . '/v1/oauth2/token', array(
             'headers' => array(
                 'Authorization' => 'Basic ' . base64_encode($client_id . ':' . $client_secret),
                 'Content-Type' => 'application/x-www-form-urlencoded',
@@ -268,11 +285,21 @@ class AIP_Payment {
             'body' => 'grant_type=client_credentials',
         ));
         
+        if (is_wp_error($auth_response)) {
+            error_log('PayPal Verify Auth Error (WP_Error): ' . $auth_response->get_error_message());
+            wp_send_json_error(array('message' => __('Payment verification failed', 'ai-itinerary-plugin')));
+        }
+        
         $auth_body = json_decode(wp_remote_retrieve_body($auth_response), true);
         $access_token = $auth_body['access_token'] ?? '';
         
+        if (empty($access_token)) {
+            error_log('PayPal Verify Auth Error: No access token. Response: ' . print_r($auth_body, true));
+            wp_send_json_error(array('message' => __('Payment verification failed', 'ai-itinerary-plugin')));
+        }
+        
         // Verify order
-        $verify_response = wp_remote_get('https://api-m.paypal.com/v2/checkout/orders/' . $order_id, array(
+        $verify_response = wp_remote_get($api_base . '/v2/checkout/orders/' . $order_id, array(
             'headers' => array(
                 'Authorization' => 'Bearer ' . $access_token,
                 'Content-Type' => 'application/json',
@@ -280,6 +307,7 @@ class AIP_Payment {
         ));
         
         if (is_wp_error($verify_response)) {
+            error_log('PayPal Verify Order Error (WP_Error): ' . $verify_response->get_error_message());
             wp_send_json_error(array('message' => __('Payment verification failed', 'ai-itinerary-plugin')));
         }
         

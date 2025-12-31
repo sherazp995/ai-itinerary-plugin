@@ -26,17 +26,22 @@ class AIP_Affiliate {
     }
     
     /**
-     * Add affiliate links to itinerary data
+     * Add affiliate links to itinerary data (flexible, platform-agnostic)
      */
-    public static function add_affiliate_links($itinerary_data, $destination) {
+    public static function add_affiliate_links($itinerary_data, $destination, $dates = array()) {
         $button_style = get_option('aip_affiliate_button_style', 'hidden');
         
-        // Generate affiliate links
-        $links = array(
-            'booking' => self::get_booking_link($destination),
-            'skyscanner' => self::get_skyscanner_link($destination),
-            'getyourguide' => self::get_getyourguide_link($destination),
-        );
+        // Get active affiliate providers from database
+        $providers = AIP_Database::get_active_affiliate_providers();
+        
+        $links = array();
+        
+        foreach ($providers as $provider) {
+            $link = self::generate_affiliate_link($provider, $destination, $dates);
+            if ($link) {
+                $links[$provider->slug] = $link;
+            }
+        }
         
         // Add links to itinerary data
         $itinerary_data['affiliate_links'] = $links;
@@ -46,62 +51,51 @@ class AIP_Affiliate {
     }
     
     /**
-     * Get Booking.com affiliate link
+     * Generate affiliate link from provider template
+     * This is the core method that makes the system flexible and extensible
      */
-    private static function get_booking_link($destination) {
-        $affiliate_id = get_option('aip_booking_affiliate_id');
-        
-        if (empty($affiliate_id)) {
+    private static function generate_affiliate_link($provider, $destination, $dates = array()) {
+        // Skip if no affiliate ID configured
+        if (empty($provider->affiliate_id)) {
             return null;
         }
         
-        $destination_encoded = urlencode($destination);
-        
-        return array(
-            'url' => "https://www.booking.com/searchresults.html?ss={$destination_encoded}&aid={$affiliate_id}",
-            'label' => __('Find Hotels', 'ai-itinerary-plugin'),
-            'provider' => 'Booking.com',
-            'icon' => '🏨',
+        // Prepare replacement variables
+        $replacements = array(
+            '{affiliate_id}' => urlencode($provider->affiliate_id),
+            '{destination}' => urlencode($destination),
+            '{destination_slug}' => sanitize_title($destination),
         );
-    }
-    
-    /**
-     * Get Skyscanner affiliate link
-     */
-    private static function get_skyscanner_link($destination) {
-        $affiliate_id = get_option('aip_skyscanner_affiliate_id');
         
-        if (empty($affiliate_id)) {
-            return null;
+        // Add date parameters if available
+        if (!empty($dates['check_in'])) {
+            $replacements['{check_in}'] = urlencode($dates['check_in']);
+        }
+        if (!empty($dates['check_out'])) {
+            $replacements['{check_out}'] = urlencode($dates['check_out']);
         }
         
-        $destination_encoded = urlencode($destination);
+        // Handle IATA codes (for flights)
+        if (!empty($dates['destination_iata'])) {
+            $replacements['{destination_iata}'] = urlencode($dates['destination_iata']);
+        }
+        if (!empty($dates['origin'])) {
+            $replacements['{origin}'] = urlencode($dates['origin']);
+        }
         
-        return array(
-            'url' => "https://www.skyscanner.com/transport/flights/everywhere/{$destination_encoded}/?associateid={$affiliate_id}",
-            'label' => __('Book Flights', 'ai-itinerary-plugin'),
-            'provider' => 'Skyscanner',
-            'icon' => '✈️',
+        // Generate URL from template
+        $url = str_replace(
+            array_keys($replacements),
+            array_values($replacements),
+            $provider->link_template
         );
-    }
-    
-    /**
-     * Get GetYourGuide affiliate link
-     */
-    private static function get_getyourguide_link($destination) {
-        $affiliate_id = get_option('aip_getyourguide_affiliate_id');
-        
-        if (empty($affiliate_id)) {
-            return null;
-        }
-        
-        $destination_encoded = urlencode($destination);
         
         return array(
-            'url' => "https://www.getyourguide.com/s/?q={$destination_encoded}&partner_id={$affiliate_id}",
-            'label' => __('Book Activities', 'ai-itinerary-plugin'),
-            'provider' => 'GetYourGuide',
-            'icon' => '🎯',
+            'url' => $url,
+            'label' => __($provider->label, 'ai-itinerary-plugin'),
+            'provider' => $provider->name,
+            'icon' => $provider->icon,
+            'category' => $provider->category,
         );
     }
     
