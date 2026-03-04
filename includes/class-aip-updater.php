@@ -70,7 +70,7 @@ class AIP_Updater {
             'name'          => 'AI Travel Itinerary Generator',
             'slug'          => 'ai-itinerary-plugin',
             'version'       => ltrim($release->tag_name, 'v'),
-            'author'        => 'Yoiner',
+            'author'        => 'Sheraz',
             'homepage'      => 'https://github.com/' . self::$github_repo,
             'download_link' => 'https://api.github.com/repos/' . self::$github_repo . '/zipball/' . $release->tag_name,
             'sections'      => [
