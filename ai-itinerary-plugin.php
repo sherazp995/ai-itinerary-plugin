@@ -37,6 +37,7 @@ require_once AIP_PLUGIN_DIR . 'includes/class-aip-woocommerce.php';
 require_once AIP_PLUGIN_DIR . 'includes/class-aip-membership.php';
 require_once AIP_PLUGIN_DIR . 'includes/class-aip-travelpayouts.php';
 require_once AIP_PLUGIN_DIR . 'includes/class-aip-skyscanner.php';
+require_once AIP_PLUGIN_DIR . 'includes/class-aip-updater.php';
 
 class AI_Itinerary_Plugin {
 
@@ -66,6 +67,7 @@ class AI_Itinerary_Plugin {
         AIP_Membership::get_instance();
         AIP_Travelpayouts::get_instance();
         AIP_Skyscanner::get_instance();
+        AIP_Updater::init();
     }
 
     public function activate() {
