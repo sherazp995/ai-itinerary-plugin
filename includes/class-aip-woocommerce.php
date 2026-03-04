@@ -39,6 +39,12 @@ class AIP_WooCommerce {
         $product_id = get_option('aip_wc_product_id');
         if (!$product_id) return home_url();
 
+        // WC()->cart is only populated on frontend; REST requests need an explicit load.
+        if (function_exists('wc_load_cart') && (!WC()->cart || !WC()->session)) {
+            wc_load_cart();
+        }
+        if (!WC()->cart) return wc_get_checkout_url();
+
         WC()->cart->empty_cart();
         WC()->cart->add_to_cart($product_id, 1, 0, [], [
             'aip_trip_data' => $trip_data,

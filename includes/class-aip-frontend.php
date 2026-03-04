@@ -14,6 +14,50 @@ class AIP_Frontend {
         add_action('wp_enqueue_scripts', [$this, 'enqueue_assets']);
         add_shortcode('ai_itinerary', [$this, 'render_shortcode']);
         add_action('wp_footer', [$this, 'render_widget']);
+        add_filter('body_class', [$this, 'maybe_add_chat_body_class']);
+        add_action('init', [$this, 'register_share_rewrite']);
+        add_filter('query_vars', [$this, 'register_share_query_var']);
+        add_action('template_redirect', [$this, 'maybe_render_share_page']);
+    }
+
+    public function register_share_rewrite() {
+        add_rewrite_rule('^aip-itinerary/([a-f0-9]{32})/?$', 'index.php?aip_share=$matches[1]', 'top');
+    }
+
+    public function register_share_query_var($vars) {
+        $vars[] = 'aip_share';
+        return $vars;
+    }
+
+    public function maybe_render_share_page() {
+        $token = get_query_var('aip_share');
+        if (!$token) return;
+
+        $itinerary = AIP_Database::get_itinerary_by_share_token($token);
+        if (!$itinerary) {
+            status_header(404);
+            nocache_headers();
+            include AIP_PLUGIN_DIR . 'includes/views/share-not-found.php';
+            exit;
+        }
+
+        $itinerary_data = json_decode($itinerary->data, true);
+        include AIP_PLUGIN_DIR . 'includes/views/share.php';
+        exit;
+    }
+
+    /**
+     * Tag the <body> with `aip-chat-page` when the page contains the [ai_itinerary] shortcode.
+     * The CSS + bundle JS then: keep the theme's navbar, hide the page title/hero/footer,
+     * and dock the chat panel into the remaining viewport.
+     */
+    public function maybe_add_chat_body_class($classes) {
+        if (!is_singular()) return $classes;
+        $post = get_post();
+        if ($post && has_shortcode($post->post_content, 'ai_itinerary')) {
+            $classes[] = 'aip-chat-page';
+        }
+        return $classes;
     }
 
     public function enqueue_assets() {

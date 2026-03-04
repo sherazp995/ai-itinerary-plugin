@@ -3,7 +3,7 @@
  * Plugin Name: AI Travel Itinerary Generator
  * Plugin URI: https://yoiner.gamercity.io
  * Description: AI-powered travel itinerary generator with chat interface, PDF export, and affiliate integration.
- * Version: 1.0.0
+ * Version: 1.1.0
  * Requires at least: 5.8
  * Requires PHP: 7.4
  * Author: Sheraz
@@ -16,7 +16,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('AIP_VERSION', '1.0.0');
+define('AIP_VERSION', '1.1.0');
 define('AIP_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AIP_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AIP_PLUGIN_BASENAME', plugin_basename(__FILE__));
@@ -33,6 +33,7 @@ require_once AIP_PLUGIN_DIR . 'includes/class-aip-claude.php';
 require_once AIP_PLUGIN_DIR . 'includes/class-aip-frontend.php';
 require_once AIP_PLUGIN_DIR . 'includes/class-aip-admin.php';
 require_once AIP_PLUGIN_DIR . 'includes/class-aip-pdf.php';
+require_once AIP_PLUGIN_DIR . 'includes/class-aip-ics.php';
 require_once AIP_PLUGIN_DIR . 'includes/class-aip-woocommerce.php';
 require_once AIP_PLUGIN_DIR . 'includes/class-aip-membership.php';
 require_once AIP_PLUGIN_DIR . 'includes/class-aip-travelpayouts.php';
@@ -57,6 +58,7 @@ class AI_Itinerary_Plugin {
     }
 
     public function init() {
+        AIP_Database::maybe_upgrade_schema();
         AIP_Database::get_instance();
         AIP_REST_API::get_instance();
         AIP_Claude::get_instance();
@@ -73,6 +75,16 @@ class AI_Itinerary_Plugin {
     public function activate() {
         AIP_Database::create_tables();
         AIP_WooCommerce::create_products();
+
+        add_option('aip_free_itinerary_limit', 3);
+        add_option('aip_claude_model', 'claude-haiku-4-5-20251001');
+        add_option('aip_bot_name', 'Travel Buddy');
+        add_option('aip_ai_tone', 'friendly');
+        add_option('aip_default_language', 'en');
+        add_option('aip_primary_color', '#2271b1');
+        add_option('aip_secondary_color', '#135e96');
+        add_option('aip_premium_price', '5.00');
+
         flush_rewrite_rules();
     }
 

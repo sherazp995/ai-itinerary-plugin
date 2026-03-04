@@ -4,7 +4,7 @@ import { api } from '../api/client';
 export function useItinerary() {
   const {
     isGenerating, setIsGenerating, setItinerary, setAffiliateLinks,
-    setView, user, setShowAuth,
+    setView, user, setUser, setShowAuth,
   } = useAppStore();
 
   const generate = async (type = 'free') => {
@@ -22,9 +22,15 @@ export function useItinerary() {
         return;
       }
 
-      setItinerary(data.itinerary);
+      setItinerary(data.itinerary, data.itinerary_id);
       setAffiliateLinks(data.affiliate_links || []);
       setView('itinerary');
+
+      // Update free count
+      if (data.free_used !== undefined) {
+        const current = user || {};
+        setUser({ ...current, free_used: data.free_used, free_remaining: data.free_remaining });
+      }
     } catch (err) {
       alert(err.message || 'Failed to generate itinerary');
     } finally {

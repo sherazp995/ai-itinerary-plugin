@@ -12,40 +12,39 @@ class AIP_Travelpayouts {
 
     private function __construct() {}
 
-    public static function get_links($destination) {
-        $token = get_option('aip_travelpayouts_token', '');
-        if (empty($token)) return [];
-
+    public static function get_links($destination, $date = '') {
         $dest_encoded = urlencode($destination);
-
         $links = [];
 
-        // Hotels via Hotellook
-        $links[] = [
-            'provider' => 'travelpayouts',
-            'category' => 'hotels',
-            'label'    => __('Book Hotels', 'ai-itinerary'),
-            'icon'     => 'hotel',
-            'url'      => "https://search.hotellook.com/?marker={$token}&destination={$dest_encoded}",
-        ];
+        $tp_token = get_option('aip_travelpayouts_token', '');
+        if (!empty($tp_token)) {
+            $links[] = [
+                'provider' => 'travelpayouts',
+                'category' => 'hotels',
+                'label'    => __('Book Hotels', 'ai-itinerary'),
+                'icon'     => 'hotel',
+                'url'      => "https://search.hotellook.com/?marker={$tp_token}&destination={$dest_encoded}",
+            ];
+            $links[] = [
+                'provider' => 'travelpayouts',
+                'category' => 'flights',
+                'label'    => __('Find Flights', 'ai-itinerary'),
+                'icon'     => 'flight',
+                'url'      => "https://www.aviasales.com/?marker={$tp_token}&destination={$dest_encoded}",
+            ];
+            $links[] = [
+                'provider' => 'travelpayouts',
+                'category' => 'activities',
+                'label'    => __('Book Activities', 'ai-itinerary'),
+                'icon'     => 'activity',
+                'url'      => "https://www.getyourguide.com/s/?partner_id={$tp_token}&q={$dest_encoded}",
+            ];
+        }
 
-        // Flights via Aviasales
-        $links[] = [
-            'provider' => 'travelpayouts',
-            'category' => 'flights',
-            'label'    => __('Find Flights', 'ai-itinerary'),
-            'icon'     => 'flight',
-            'url'      => "https://www.aviasales.com/?marker={$token}&destination={$dest_encoded}",
-        ];
-
-        // Activities
-        $links[] = [
-            'provider' => 'travelpayouts',
-            'category' => 'activities',
-            'label'    => __('Book Activities', 'ai-itinerary'),
-            'icon'     => 'activity',
-            'url'      => "https://www.getyourguide.com/s/?partner_id={$token}&q={$dest_encoded}",
-        ];
+        $skyscanner = AIP_Skyscanner::search_flights($destination, $date);
+        if (!empty($skyscanner)) {
+            $links[] = $skyscanner;
+        }
 
         return $links;
     }

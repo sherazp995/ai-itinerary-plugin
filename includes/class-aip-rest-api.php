@@ -55,6 +55,24 @@ class AIP_REST_API {
             'permission_callback' => function() { return is_user_logged_in(); },
         ]);
 
+        register_rest_route(self::NAMESPACE, '/itinerary/(?P<id>\d+)/share', [
+            'methods'  => 'POST',
+            'callback' => [$this, 'itinerary_share'],
+            'permission_callback' => function() { return is_user_logged_in(); },
+        ]);
+
+        register_rest_route(self::NAMESPACE, '/itinerary/share/(?P<token>[a-f0-9]{32})', [
+            'methods'  => 'GET',
+            'callback' => [$this, 'itinerary_shared'],
+            'permission_callback' => '__return_true',
+        ]);
+
+        register_rest_route(self::NAMESPACE, '/itinerary/(?P<id>\d+)/ics', [
+            'methods'  => 'GET',
+            'callback' => [$this, 'itinerary_ics'],
+            'permission_callback' => '__return_true',
+        ]);
+
         // --- PDF ---
         register_rest_route(self::NAMESPACE, '/pdf/generate', [
             'methods'  => 'POST',
@@ -118,7 +136,21 @@ class AIP_REST_API {
     // CHAT ENDPOINTS
     // ============================================================
 
+    private function check_rate_limit($bucket, $max, $window_seconds) {
+        $ip = isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field($_SERVER['REMOTE_ADDR']) : 'unknown';
+        $transient_key = 'aip_rl_' . md5($bucket . '|' . $ip);
+        $count = (int) get_transient($transient_key);
+        if ($count >= $max) {
+            return new WP_Error('rate_limited', __('Too many requests. Please slow down and try again in a minute.', 'ai-itinerary'), ['status' => 429]);
+        }
+        set_transient($transient_key, $count + 1, $window_seconds);
+        return true;
+    }
+
     public function chat_message(WP_REST_Request $request) {
+        $limit_check = $this->check_rate_limit('chat', 30, 60);
+        if (is_wp_error($limit_check)) return $limit_check;
+
         $message = sanitize_text_field($request->get_param('message'));
         if (empty($message)) {
             return new WP_Error('empty_message', __('Message cannot be empty', 'ai-itinerary'), ['status' => 400]);
@@ -199,6 +231,9 @@ class AIP_REST_API {
     // ============================================================
 
     public function itinerary_generate(WP_REST_Request $request) {
+        $limit_check = $this->check_rate_limit('generate', 5, 60);
+        if (is_wp_error($limit_check)) return $limit_check;
+
         $user_id = get_current_user_id();
         $session_id = $user_id ? null : AIP_Database::get_guest_session_id();
         $type = sanitize_text_field($request->get_param('type') ?? 'free');
@@ -308,11 +343,19 @@ class AIP_REST_API {
         // Get affiliate links
         $affiliates = AIP_Travelpayouts::get_links($collected['destination']);
 
+        // Get updated free counts
+        $limit = (int) get_option('aip_free_itinerary_limit', 3);
+        $used = $user_id
+            ? AIP_Database::get_user_free_count($user_id)
+            : AIP_Database::get_guest_free_count($session_id);
+
         return rest_ensure_response([
             'itinerary_id'    => $itinerary_id,
             'itinerary'       => $itinerary_data,
             'type'            => $type,
             'affiliate_links' => $affiliates,
+            'free_used'       => $used,
+            'free_remaining'  => max(0, $limit - $used),
         ]);
     }
 
@@ -353,6 +396,73 @@ class AIP_REST_API {
         }
 
         return rest_ensure_response(['saved' => true]);
+    }
+
+    public function itinerary_share(WP_REST_Request $request) {
+        $id = (int) $request->get_param('id');
+        $itinerary = AIP_Database::get_itinerary($id);
+
+        if (!$itinerary || $itinerary->user_id != get_current_user_id()) {
+            return new WP_Error('forbidden', __('Not your itinerary', 'ai-itinerary'), ['status' => 403]);
+        }
+        if ($itinerary->status !== 'completed') {
+            return new WP_Error('not_ready', __('Itinerary is not ready to share yet', 'ai-itinerary'), ['status' => 400]);
+        }
+
+        $token = $itinerary->share_token;
+        if (empty($token)) {
+            $token = bin2hex(random_bytes(16));
+            AIP_Database::update_itinerary($id, ['share_token' => $token]);
+        }
+
+        return rest_ensure_response([
+            'share_token' => $token,
+            'share_url'   => home_url('/aip-itinerary/' . $token . '/'),
+        ]);
+    }
+
+    public function itinerary_shared(WP_REST_Request $request) {
+        $token = sanitize_text_field($request->get_param('token'));
+        $itinerary = AIP_Database::get_itinerary_by_share_token($token);
+
+        if (!$itinerary) {
+            return new WP_Error('not_found', __('Shared itinerary not found', 'ai-itinerary'), ['status' => 404]);
+        }
+
+        $itinerary->data = json_decode($itinerary->data, true);
+        unset($itinerary->user_id, $itinerary->wc_order_id, $itinerary->share_token);
+
+        return rest_ensure_response($itinerary);
+    }
+
+    public function itinerary_ics(WP_REST_Request $request) {
+        $id = (int) $request->get_param('id');
+        $token = sanitize_text_field($request->get_param('token'));
+        $itinerary = AIP_Database::get_itinerary($id);
+
+        if (!$itinerary) {
+            return new WP_Error('not_found', __('Itinerary not found', 'ai-itinerary'), ['status' => 404]);
+        }
+
+        $is_owner = get_current_user_id() && $itinerary->user_id == get_current_user_id();
+        $has_valid_token = $token && hash_equals((string) $itinerary->share_token, $token);
+        if (!$is_owner && !$has_valid_token) {
+            return new WP_Error('forbidden', __('You do not have access to this itinerary', 'ai-itinerary'), ['status' => 403]);
+        }
+
+        $start_date = sanitize_text_field($request->get_param('start') ?? date('Y-m-d'));
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $start_date)) {
+            $start_date = date('Y-m-d');
+        }
+
+        $ics = AIP_ICS::generate($itinerary, $start_date);
+
+        $filename = sanitize_title($itinerary->destination ?: 'itinerary') . '-' . $id . '.ics';
+
+        header('Content-Type: text/calendar; charset=utf-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        echo $ics;
+        exit;
     }
 
     // ============================================================

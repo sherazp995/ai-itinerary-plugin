@@ -29,11 +29,13 @@ class AIP_Database {
             data LONGTEXT NOT NULL,
             wc_order_id BIGINT UNSIGNED DEFAULT NULL,
             status ENUM('generating','completed','failed') DEFAULT 'generating',
+            share_token VARCHAR(32) DEFAULT NULL,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             INDEX idx_user (user_id),
             INDEX idx_destination (destination),
-            INDEX idx_status (status)
+            INDEX idx_status (status),
+            UNIQUE KEY idx_share_token (share_token)
         ) $charset_collate;";
 
         $sql[] = "CREATE TABLE {$wpdb->prefix}aip_conversations (
@@ -119,6 +121,20 @@ class AIP_Database {
             "SELECT * FROM {$wpdb->prefix}aip_itineraries WHERE user_id = %d ORDER BY created_at DESC LIMIT %d",
             $user_id, $limit
         ));
+    }
+
+    public static function get_itinerary_by_share_token($token) {
+        global $wpdb;
+        return $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM {$wpdb->prefix}aip_itineraries WHERE share_token = %s AND status = 'completed' LIMIT 1",
+            $token
+        ));
+    }
+
+    public static function maybe_upgrade_schema() {
+        $stored = get_option('aip_db_version');
+        if ($stored === AIP_VERSION) return;
+        self::create_tables();
     }
 
     // --- Conversation State ---

@@ -1,10 +1,12 @@
 import React from 'react';
 import { useAppStore } from '../../stores/appStore';
+import { useItinerary } from '../../hooks/useItinerary';
 import { DayCard } from './DayCard';
 import { AffiliateLinks } from '../Affiliate/AffiliateLinks';
 
 export function ItineraryPanel() {
-  const { itinerary, affiliateLinks, resetChat, config } = useAppStore();
+  const { itinerary, itineraryId, affiliateLinks, resetChat, config } = useAppStore();
+  const { downloadPdf } = useItinerary();
 
   if (!itinerary) return null;
 
@@ -39,7 +41,20 @@ export function ItineraryPanel() {
       {affiliateLinks.length > 0 && <AffiliateLinks links={affiliateLinks} />}
 
       <div className="aip-itinerary__actions">
-        <button className="aip-btn aip-btn--primary" onClick={resetChat} style={{ background: config.primaryColor }}>
+        {itineraryId && (
+          <button
+            className="aip-btn aip-btn--primary"
+            onClick={() => downloadPdf(itineraryId)}
+            style={{ background: config.primaryColor, marginBottom: '8px' }}
+          >
+            Download PDF
+          </button>
+        )}
+        <button
+          className="aip-btn"
+          onClick={resetChat}
+          style={{ background: '#f0f0f0', color: config.primaryColor }}
+        >
           Plan Another Trip
         </button>
       </div>

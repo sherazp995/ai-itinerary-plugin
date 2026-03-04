@@ -195,8 +195,8 @@ class AIP_Admin {
                         <th><?php _e('Claude Model', 'ai-itinerary'); ?></th>
                         <td>
                             <select name="aip_claude_model">
-                                <option value="claude-sonnet-4-6" <?php selected(get_option('aip_claude_model', 'claude-sonnet-4-6'), 'claude-sonnet-4-6'); ?>>Claude Sonnet 4.6</option>
-                                <option value="claude-haiku-4-5-20251001" <?php selected(get_option('aip_claude_model'), 'claude-haiku-4-5-20251001'); ?>>Claude Haiku 4.5</option>
+                                <option value="claude-haiku-4-5-20251001" <?php selected(get_option('aip_claude_model', 'claude-haiku-4-5-20251001'), 'claude-haiku-4-5-20251001'); ?>>Claude Haiku 4.5 (Cheapest)</option>
+                                <option value="claude-sonnet-4-6" <?php selected(get_option('aip_claude_model'), 'claude-sonnet-4-6'); ?>>Claude Sonnet 4.6</option>
                                 <option value="claude-opus-4-6" <?php selected(get_option('aip_claude_model'), 'claude-opus-4-6'); ?>>Claude Opus 4.6</option>
                             </select>
                         </td>

@@ -2,6 +2,8 @@
    AI Itinerary Plugin - Widget Styles
    ======================================== */
 
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Text&family=Source+Sans+3:wght@400;500;600;700&display=swap');
+
 :root {
   --aip-primary: #2271b1;
   --aip-secondary: #135e96;
@@ -44,8 +46,7 @@
   bottom: 90px;
   right: 24px;
   width: 400px;
-  height: 600px;
-  max-height: 80vh;
+  height: 550px;
   border-radius: var(--aip-radius);
   box-shadow: var(--aip-shadow);
   z-index: 99998;
@@ -55,18 +56,279 @@
   background: var(--aip-bg);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
+/* ---- Fullpage Panel — dedicated chat interface (ChatGPT/Claude-style) ---- */
+/* On pages with the shortcode, keep the theme's navbar but hide everything else:
+   the page title/hero, page content wrappers, footer, sidebars. */
+body.aip-chat-page footer.wp-block-template-part,
+body.aip-chat-page .wp-block-template-part[class*="footer"],
+body.aip-chat-page .site-footer,
+body.aip-chat-page #colophon,
+body.aip-chat-page .entry-header,
+body.aip-chat-page .wp-block-post-title,
+body.aip-chat-page .page-title,
+body.aip-chat-page .entry-title,
+body.aip-chat-page .page-header,
+body.aip-chat-page .elementor-location-footer,
+body.aip-chat-page aside#secondary,
+body.aip-chat-page .sidebar {
+  display: none !important;
+}
+/* Page content wrapper: remove all its layout constraints so our chat can
+   occupy the full viewport below the navbar. */
+body.aip-chat-page .wp-block-post-content,
+body.aip-chat-page .entry-content,
+body.aip-chat-page main,
+body.aip-chat-page .wp-block-group,
+body.aip-chat-page .wp-site-blocks {
+  padding: 0 !important;
+  margin: 0 !important;
+  max-width: none !important;
+}
+body.aip-chat-page { overflow: hidden; }
+
+#aip-fullpage {
+  display: block;
+  margin: 0;
+  padding: 0;
+  min-height: 1px;
+}
 .aip-panel--fullpage {
-  width: 100%;
-  max-width: 800px;
-  margin: 0 auto;
-  min-height: 600px;
-  border-radius: var(--aip-radius);
-  box-shadow: var(--aip-shadow);
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: var(--aip-header-height, 0px);
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-  background: var(--aip-bg);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #ffffff;
+  font-family: 'Source Sans 3', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  z-index: 1;
+}
+
+/* Header — slim, sticky top bar */
+.aip-panel--fullpage .aip-header {
+  flex-shrink: 0;
+  padding: 14px 24px;
+  background: #ffffff;
+  color: var(--aip-text);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.aip-panel--fullpage .aip-header__left {
+  gap: 12px;
+}
+.aip-panel--fullpage .aip-header__name {
+  font-family: 'DM Serif Text', Georgia, serif;
+  font-size: 20px;
+  font-weight: 400;
+  color: var(--aip-text);
+  letter-spacing: 0.2px;
+}
+.aip-panel--fullpage .aip-limit {
+  color: var(--aip-text-light);
+  background: #f3f4f6;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  font-size: 12px;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-weight: 500;
+}
+.aip-panel--fullpage .aip-header__btn {
+  background: #f3f4f6;
+  color: var(--aip-text);
+}
+.aip-panel--fullpage .aip-header__btn:hover {
+  background: #e7e8ec;
+}
+
+/* Body — the chat area stretches */
+.aip-panel--fullpage .aip-panel__body {
+  flex: 1;
+  min-height: 0; /* allow children to scroll */
+}
+
+/* Message scroll area takes all remaining height above the input */
+.aip-panel--fullpage .aip-chat {
+  height: 100%;
+}
+
+/* Messages — centered readable column */
+.aip-panel--fullpage .aip-messages {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 32px 24px 20px;
+  gap: 18px;
+  background: #ffffff;
+  scroll-behavior: smooth;
+}
+.aip-panel--fullpage .aip-msg {
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+  gap: 12px;
+  align-self: center;
+  justify-content: flex-start;
+}
+.aip-panel--fullpage .aip-msg--user {
+  flex-direction: row-reverse;
+}
+.aip-panel--fullpage .aip-msg__avatar {
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  font-size: 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+.aip-panel--fullpage .aip-msg__bubble {
+  padding: 12px 18px;
+  border-radius: 16px;
+  font-size: 15.5px;
+  line-height: 1.65;
+  max-width: calc(100% - 46px);
+}
+.aip-panel--fullpage .aip-msg__bubble--bot {
+  background: #f7f7f8;
+  color: var(--aip-text);
+  border: none;
+  box-shadow: none;
+  border-bottom-left-radius: 4px;
+}
+.aip-panel--fullpage .aip-msg__bubble--user {
+  background: var(--aip-primary);
+  color: #fff;
+  border-bottom-right-radius: 4px;
+  box-shadow: 0 1px 2px rgba(34, 113, 177, 0.15);
+}
+
+/* Typing indicator — matches bot bubble */
+.aip-panel--fullpage .aip-typing {
+  padding: 14px 18px;
+  border-radius: 16px;
+  border-bottom-left-radius: 4px;
+  background: #f7f7f8;
+  border: none;
+}
+
+/* Input — centered, elevated, pinned to bottom */
+.aip-panel--fullpage .aip-input {
+  flex-shrink: 0;
+  padding: 16px 24px 24px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  background: #ffffff;
+  display: flex;
+  justify-content: center;
+}
+.aip-panel--fullpage .aip-input > * {
+  /* inner wrapper if any */
+}
+.aip-panel--fullpage .aip-input {
+  gap: 0;
+}
+.aip-panel--fullpage .aip-input::before {
+  content: none;
+}
+.aip-panel--fullpage .aip-input__field {
+  flex: 1;
+  max-width: 760px;
+  padding: 14px 54px 14px 20px;
+  border-radius: 14px;
+  font-size: 15.5px;
+  font-family: 'Source Sans 3', sans-serif;
+  border: 1px solid #e4e5e9;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.aip-panel--fullpage .aip-input__field:focus {
+  border-color: var(--aip-primary);
+  box-shadow: 0 0 0 3px rgba(34, 113, 177, 0.1);
+}
+.aip-panel--fullpage .aip-input__btn {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  margin-left: -46px;
+  margin-right: 10px;
+  align-self: center;
+  border-radius: 10px;
+  box-shadow: none;
+  transition: opacity 0.2s, transform 0.15s, background 0.2s;
+}
+.aip-panel--fullpage .aip-input__btn:not(:disabled):hover {
+  transform: none;
+  background: var(--aip-secondary);
+  box-shadow: none;
+}
+
+/* Generate buttons — centered, constrained column */
+.aip-panel--fullpage .aip-generate {
+  padding: 18px 24px 22px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  background: #ffffff;
+  max-width: 760px;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+.aip-panel--fullpage .aip-generate__text {
+  font-family: 'DM Serif Text', Georgia, serif;
+  font-size: 17px;
+  font-weight: 400;
+  color: var(--aip-text);
+}
+.aip-panel--fullpage .aip-generate__btn {
+  border-radius: 10px;
+  padding: 13px;
+  font-size: 15px;
+  font-family: 'Source Sans 3', sans-serif;
+  transition: opacity 0.2s, transform 0.1s, background 0.2s;
+}
+.aip-panel--fullpage .aip-generate__btn:not(:disabled):hover {
+  transform: translateY(-1px);
+}
+
+/* Itinerary panel — centered column, relaxed */
+.aip-panel--fullpage .aip-itinerary {
+  padding: 24px;
+}
+.aip-panel--fullpage .aip-itinerary__header,
+.aip-panel--fullpage .aip-itinerary__summary,
+.aip-panel--fullpage .aip-itinerary__tips,
+.aip-panel--fullpage .aip-itinerary__actions,
+.aip-panel--fullpage .aip-day,
+.aip-panel--fullpage .aip-affiliates {
+  max-width: 760px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.aip-panel--fullpage .aip-itinerary__header h2 {
+  font-family: 'DM Serif Text', Georgia, serif;
+  font-size: 28px;
+  font-weight: 400;
+}
+
+/* Strip any lingering theme body padding/margin when our fullpage template is active */
+body.aip-fullpage-body {
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden; /* panel has its own scroll */
+}
+
+/* Responsive */
+@media (max-width: 720px) {
+  .aip-panel--fullpage .aip-messages {
+    padding: 20px 16px 12px;
+  }
+  .aip-panel--fullpage .aip-input {
+    padding: 12px 16px 20px;
+  }
+  .aip-panel--fullpage .aip-msg__bubble {
+    font-size: 15px;
+  }
 }
 
 /* ---- Header ---- */
@@ -548,11 +810,11 @@
 /* ---- Responsive ---- */
 @media (max-width: 480px) {
   .aip-panel--widget {
+    top: 0;
     bottom: 0;
     right: 0;
+    left: 0;
     width: 100%;
-    height: 100%;
-    max-height: 100vh;
     border-radius: 0;
   }
   .aip-trigger {
