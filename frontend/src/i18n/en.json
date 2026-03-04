@@ -1,0 +1,14 @@
+{
+  "greeting": "Hi! I'm %s, your AI travel assistant. Where would you like to go?",
+  "type_message": "Type your message...",
+  "generate_free": "Generate Free Itinerary",
+  "generate_premium": "Get Premium Itinerary",
+  "generating": "Generating...",
+  "trip_ready": "Your trip details are ready!",
+  "free_limit": "Free limit reached. Try premium!",
+  "sign_in": "Sign In",
+  "sign_up": "Create Account",
+  "plan_another": "Plan Another Trip",
+  "book_trip": "Book Your Trip",
+  "travel_tips": "Travel Tips"
+}

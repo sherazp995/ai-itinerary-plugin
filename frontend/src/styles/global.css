@@ -1,0 +1,562 @@
+/* ========================================
+   AI Itinerary Plugin - Widget Styles
+   ======================================== */
+
+:root {
+  --aip-primary: #2271b1;
+  --aip-secondary: #135e96;
+  --aip-bg: #f7f8fa;
+  --aip-white: #ffffff;
+  --aip-text: #1d2327;
+  --aip-text-light: #646970;
+  --aip-border: #e0e0e0;
+  --aip-radius: 12px;
+  --aip-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
+}
+
+/* ---- Widget Trigger ---- */
+.aip-trigger {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--aip-primary);
+  color: white;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--aip-shadow);
+  z-index: 99999;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.aip-trigger:hover {
+  transform: scale(1.08);
+  box-shadow: 0 6px 32px rgba(0, 0, 0, 0.18);
+}
+
+/* ---- Panel ---- */
+.aip-panel--widget {
+  position: fixed;
+  bottom: 90px;
+  right: 24px;
+  width: 400px;
+  height: 600px;
+  max-height: 80vh;
+  border-radius: var(--aip-radius);
+  box-shadow: var(--aip-shadow);
+  z-index: 99998;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--aip-bg);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+.aip-panel--fullpage {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  min-height: 600px;
+  border-radius: var(--aip-radius);
+  box-shadow: var(--aip-shadow);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--aip-bg);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* ---- Header ---- */
+.aip-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  background: var(--aip-primary);
+  color: white;
+}
+.aip-header__left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.aip-header__name {
+  font-weight: 700;
+  font-size: 16px;
+}
+.aip-header__right {
+  display: flex;
+  gap: 8px;
+}
+.aip-header__btn {
+  background: rgba(255,255,255,0.15);
+  border: none;
+  color: white;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+.aip-header__btn:hover {
+  background: rgba(255,255,255,0.3);
+}
+
+/* ---- Limit Counter ---- */
+.aip-limit {
+  font-size: 12px;
+  background: rgba(255,255,255,0.2);
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+/* ---- Panel Body ---- */
+.aip-panel__body {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---- Chat ---- */
+.aip-chat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.aip-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ---- Messages ---- */
+.aip-msg {
+  display: flex;
+  gap: 8px;
+  max-width: 85%;
+}
+.aip-msg--bot {
+  align-self: flex-start;
+}
+.aip-msg--user {
+  align-self: flex-end;
+}
+.aip-msg__avatar {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 14px;
+}
+.aip-msg__bubble {
+  padding: 10px 14px;
+  border-radius: 16px;
+  font-size: 14px;
+  line-height: 1.5;
+  word-break: break-word;
+}
+.aip-msg__bubble--bot {
+  background: var(--aip-white);
+  color: var(--aip-text);
+  border-bottom-left-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.aip-msg__bubble--user {
+  background: var(--aip-primary);
+  color: white;
+  border-bottom-right-radius: 4px;
+}
+
+/* ---- Typing Indicator ---- */
+.aip-typing {
+  display: flex;
+  gap: 4px;
+  padding: 12px 14px;
+  background: var(--aip-white);
+  border-radius: 16px;
+  border-bottom-left-radius: 4px;
+}
+.aip-typing span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--aip-text-light);
+  animation: aip-bounce 1.2s infinite;
+}
+.aip-typing span:nth-child(2) { animation-delay: 0.2s; }
+.aip-typing span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes aip-bounce {
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-6px); }
+}
+
+/* ---- Chat Input ---- */
+.aip-input {
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--aip-border);
+  background: var(--aip-white);
+}
+.aip-input__field {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1px solid var(--aip-border);
+  border-radius: 24px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.aip-input__field:focus {
+  border-color: var(--aip-primary);
+}
+.aip-input__btn {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: var(--aip-primary);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s;
+}
+.aip-input__btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ---- Generate Buttons ---- */
+.aip-generate {
+  padding: 16px;
+  text-align: center;
+  border-top: 1px solid var(--aip-border);
+  background: var(--aip-white);
+}
+.aip-generate__text {
+  margin: 0 0 12px;
+  font-weight: 600;
+  color: var(--aip-text);
+}
+.aip-generate__btn {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 8px;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.aip-generate__btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.aip-generate__btn--free {
+  background: #f0f0f0;
+  color: var(--aip-text);
+}
+.aip-generate__btn--premium {
+  color: white;
+}
+.aip-generate__limit {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: #d63031;
+}
+
+/* ---- Itinerary Panel ---- */
+.aip-itinerary {
+  overflow-y: auto;
+  padding: 0;
+  flex: 1;
+}
+.aip-itinerary__header {
+  padding: 20px;
+  color: white;
+  text-align: center;
+}
+.aip-itinerary__header h2 {
+  margin: 0;
+  font-size: 22px;
+}
+.aip-itinerary__header p {
+  margin: 4px 0 0;
+  opacity: 0.9;
+}
+.aip-itinerary__summary {
+  padding: 12px 16px;
+  background: #f8f9fa;
+  font-size: 14px;
+  color: var(--aip-text-light);
+  margin: 0;
+}
+.aip-itinerary__tips {
+  padding: 12px 16px;
+  background: #f1f8e9;
+}
+.aip-itinerary__tips h3 {
+  margin: 0 0 8px;
+  font-size: 15px;
+}
+.aip-itinerary__tips ul {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 13px;
+}
+.aip-itinerary__actions {
+  padding: 16px;
+  text-align: center;
+}
+
+/* ---- Day Card ---- */
+.aip-day {
+  margin-bottom: 2px;
+}
+.aip-day__header {
+  padding: 10px 16px;
+  color: white;
+  font-weight: 700;
+  font-size: 14px;
+}
+.aip-day__activities {
+  padding: 0;
+}
+.aip-activity {
+  display: flex;
+  gap: 12px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--aip-border);
+}
+.aip-activity__time {
+  font-weight: 700;
+  font-size: 13px;
+  min-width: 50px;
+}
+.aip-activity__info strong {
+  font-size: 14px;
+}
+.aip-activity__info p {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--aip-text-light);
+}
+.aip-activity__cost {
+  font-size: 12px;
+  color: var(--aip-text-light);
+}
+.aip-day__meals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+}
+.aip-meal {
+  flex: 1;
+  min-width: 120px;
+  padding: 8px 16px;
+  background: #fff8e1;
+  font-size: 13px;
+}
+.aip-meal__type {
+  text-transform: capitalize;
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+/* ---- Affiliate Links ---- */
+.aip-affiliates {
+  padding: 16px;
+  background: #f0f4f8;
+}
+.aip-affiliates h3 {
+  margin: 0 0 12px;
+  font-size: 15px;
+}
+.aip-affiliates__grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.aip-affiliate-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: 1px solid var(--aip-border);
+  border-radius: 8px;
+  background: var(--aip-white);
+  cursor: pointer;
+  font-size: 13px;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+.aip-affiliate-btn:hover {
+  background: #eef4fc;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.aip-affiliate-btn__icon {
+  font-size: 18px;
+}
+
+/* ---- Auth Modal ---- */
+.aip-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 100000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.aip-modal {
+  background: white;
+  border-radius: var(--aip-radius);
+  padding: 24px;
+  width: 360px;
+  max-width: 90vw;
+  position: relative;
+}
+.aip-modal__close {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: var(--aip-text-light);
+}
+.aip-modal__title {
+  margin: 0 0 16px;
+  font-size: 20px;
+  text-align: center;
+}
+.aip-modal__divider {
+  display: flex;
+  align-items: center;
+  margin: 16px 0;
+  color: var(--aip-text-light);
+  font-size: 13px;
+}
+.aip-modal__divider::before,
+.aip-modal__divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--aip-border);
+}
+.aip-modal__divider span {
+  padding: 0 12px;
+}
+.aip-modal__switch {
+  text-align: center;
+  font-size: 13px;
+  margin: 12px 0 0;
+  color: var(--aip-text-light);
+}
+.aip-modal__switch button {
+  background: none;
+  border: none;
+  color: var(--aip-primary);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ---- Forms ---- */
+.aip-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.aip-form input {
+  padding: 10px 14px;
+  border: 1px solid var(--aip-border);
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+}
+.aip-form input:focus {
+  border-color: var(--aip-primary);
+}
+.aip-form__row {
+  display: flex;
+  gap: 8px;
+}
+.aip-form__row input {
+  flex: 1;
+}
+.aip-form__btn {
+  padding: 12px;
+  background: var(--aip-primary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.aip-form__btn:disabled {
+  opacity: 0.6;
+}
+.aip-form__error {
+  margin: 0;
+  padding: 8px;
+  background: #fce4ec;
+  color: #c62828;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+/* ---- Common Button ---- */
+.aip-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.aip-btn--primary {
+  color: white;
+}
+
+/* ---- Google Button ---- */
+.aip-google-btn {
+  display: flex;
+  justify-content: center;
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 480px) {
+  .aip-panel--widget {
+    bottom: 0;
+    right: 0;
+    width: 100%;
+    height: 100%;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+  .aip-trigger {
+    bottom: 16px;
+    right: 16px;
+  }
+}
