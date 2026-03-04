@@ -35,7 +35,8 @@ export const useAppStore = create((set, get) => ({
 
   // Itinerary result
   itinerary: null,
-  setItinerary: (itinerary) => set({ itinerary, view: 'itinerary' }),
+  itineraryId: null,
+  setItinerary: (itinerary, id) => set({ itinerary, itineraryId: id, view: 'itinerary' }),
   affiliateLinks: [],
   setAffiliateLinks: (links) => set({ affiliateLinks: links }),
 
@@ -66,6 +67,7 @@ export const useAppStore = create((set, get) => ({
     ready: false,
     missing: [],
     itinerary: null,
+    itineraryId: null,
     affiliateLinks: [],
     view: 'chat',
   }),

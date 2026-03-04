@@ -1,7 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 
 export function ChatInput({ onSend, disabled }) {
   const [text, setText] = useState('');
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    if (!disabled && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [disabled]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -13,6 +20,7 @@ export function ChatInput({ onSend, disabled }) {
   return (
     <form className="aip-input" onSubmit={handleSubmit}>
       <input
+        ref={inputRef}
         type="text"
         className="aip-input__field"
         value={text}

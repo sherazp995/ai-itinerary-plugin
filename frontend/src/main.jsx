@@ -3,14 +3,14 @@ import { createRoot } from 'react-dom/client';
 import App from './App';
 import './styles/global.css';
 
-// Mount on widget container
-const widgetEl = document.getElementById('aip-widget');
-if (widgetEl) {
-  createRoot(widgetEl).render(<App mode="widget" />);
-}
-
-// Mount on fullpage container
+// Mount on fullpage container (shortcode)
 const fullpageEl = document.getElementById('aip-fullpage');
 if (fullpageEl) {
   createRoot(fullpageEl).render(<App mode="fullpage" />);
+}
+
+// Mount floating widget only if fullpage is NOT on the page
+const widgetEl = document.getElementById('aip-widget');
+if (widgetEl && !fullpageEl) {
+  createRoot(widgetEl).render(<App mode="widget" />);
 }

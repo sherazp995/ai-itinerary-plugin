@@ -308,11 +308,19 @@ class AIP_REST_API {
         // Get affiliate links
         $affiliates = AIP_Travelpayouts::get_links($collected['destination']);
 
+        // Get updated free counts
+        $limit = (int) get_option('aip_free_itinerary_limit', 3);
+        $used = $user_id
+            ? AIP_Database::get_user_free_count($user_id)
+            : AIP_Database::get_guest_free_count($session_id);
+
         return rest_ensure_response([
             'itinerary_id'    => $itinerary_id,
             'itinerary'       => $itinerary_data,
             'type'            => $type,
             'affiliate_links' => $affiliates,
+            'free_used'       => $used,
+            'free_remaining'  => max(0, $limit - $used),
         ]);
     }
 

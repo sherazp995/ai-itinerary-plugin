@@ -17,7 +17,7 @@ class AIP_Claude {
     }
 
     private static function get_model() {
-        return get_option('aip_claude_model', 'claude-sonnet-4-6');
+        return get_option('aip_claude_model', 'claude-haiku-4-5-20251001');
     }
 
     /**
@@ -143,12 +143,13 @@ class AIP_Claude {
 
         $prompt = "You are {$bot_name}, an AI travel assistant.\n\n";
         $prompt .= "TONE: {$tone_text}\n\n";
-        $prompt .= "RULES:\n";
+        $prompt .= "CRITICAL RULES:\n";
         $prompt .= "- Ask ONE question at a time. Wait for the answer.\n";
         $prompt .= "- Acknowledge each answer briefly before asking the next question.\n";
         $prompt .= "- Keep responses to 2-3 sentences max.\n";
-        $prompt .= "- Do NOT mention payment, free, or premium until ALL questions are answered.\n";
-        $prompt .= "- Do NOT generate any itinerary content during the conversation.\n\n";
+        $prompt .= "- Do NOT mention payment, free, or premium.\n";
+        $prompt .= "- NEVER generate an itinerary, travel plan, day-by-day schedule, or list of activities. This is STRICTLY FORBIDDEN.\n";
+        $prompt .= "- Your ONLY job is to collect information. A separate system generates the itinerary.\n\n";
 
         if (empty($collected)) {
             $prompt .= "CURRENT STEP: Ask where they want to go. Nothing else.\n";
@@ -158,14 +159,14 @@ class AIP_Claude {
                 $prompt .= "- " . ucfirst(str_replace('_', ' ', $key)) . ": {$value}\n";
             }
             $prompt .= "\nSTILL NEED: " . implode(', ', $missing) . "\n";
-            $prompt .= "Ask about the NEXT missing item only.\n";
+            $prompt .= "Ask about the NEXT missing item only. Do NOT summarize or generate anything.\n";
         } else {
             $prompt .= "ALL INFORMATION COLLECTED:\n";
             foreach ($collected as $key => $value) {
                 $prompt .= "- " . ucfirst(str_replace('_', ' ', $key)) . ": {$value}\n";
             }
-            $prompt .= "\nSummarize their trip details and say you're ready to generate.\n";
-            $prompt .= "Do NOT generate the itinerary yet. Just confirm the details.\n";
+            $prompt .= "\nSay: \"I have everything I need! Click the Generate button below to create your itinerary.\"\n";
+            $prompt .= "ABSOLUTELY DO NOT write an itinerary, day plan, schedule, or activity list. Just tell them to click Generate.\n";
         }
 
         $prompt .= "\nREQUIRED QUESTIONS (in order):\n";
@@ -229,10 +230,22 @@ class AIP_Claude {
         }
 
         $text = $result['content'][0]['text'] ?? '';
+
+        // Strip markdown code blocks if present
+        $text = preg_replace('/^```(?:json)?\s*/i', '', trim($text));
+        $text = preg_replace('/\s*```$/', '', $text);
+
         $data = json_decode($text, true);
 
         if (!is_array($data)) {
             return [];
+        }
+
+        // Normalize array values to strings (e.g. interests: ["food","culture"] -> "food, culture")
+        foreach ($data as $key => $value) {
+            if (is_array($value)) {
+                $data[$key] = implode(', ', $value);
+            }
         }
 
         // Filter out null values
