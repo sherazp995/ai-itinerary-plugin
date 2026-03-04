@@ -177,19 +177,17 @@ Premium itineraries include:
 
 ## Changelog
 
-### Version 2.0.0
-- Complete rewrite with React frontend
-- Switched from OpenAI to Claude (Anthropic) API
-- Added streaming chat support
-- WooCommerce integration (replaces direct Stripe/PayPal)
+### Version 1.0.0
+- AI chat interface powered by Claude (Anthropic)
+- Free and Premium itinerary generation
+- React 18 frontend with Zustand state management
+- WooCommerce integration for payments
 - Paid Member Subscriptions support
 - Travelpayouts + Skyscanner affiliate integration
 - DOMPDF for server-side PDF generation
+- Google Sign-In authentication
 - GitHub-based auto-updater
 - PHPUnit test suite (50 tests)
-
-### Version 1.0.0
-- Initial release with OpenAI, Stripe/PayPal, basic chat
 
 ## License
 

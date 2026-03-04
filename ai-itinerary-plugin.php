@@ -3,7 +3,7 @@
  * Plugin Name: AI Travel Itinerary Generator
  * Plugin URI: https://yoiner.gamercity.io
  * Description: AI-powered travel itinerary generator with chat interface, PDF export, and affiliate integration.
- * Version: 2.0.0
+ * Version: 1.0.0
  * Requires at least: 5.8
  * Requires PHP: 7.4
  * Author: Sheraz
@@ -16,7 +16,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('AIP_VERSION', '2.0.0');
+define('AIP_VERSION', '1.0.0');
 define('AIP_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('AIP_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('AIP_PLUGIN_BASENAME', plugin_basename(__FILE__));
