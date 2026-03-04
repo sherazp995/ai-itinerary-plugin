@@ -1,0 +1,12 @@
+{
+    "name": "yoiner/ai-itinerary-plugin",
+    "description": "AI Travel Itinerary Generator - WordPress Plugin",
+    "type": "wordpress-plugin",
+    "require": {
+        "php": ">=7.4",
+        "dompdf/dompdf": "^2.0"
+    },
+    "autoload": {
+        "classmap": ["includes/"]
+    }
+}

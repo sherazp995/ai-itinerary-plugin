@@ -102,6 +102,10 @@
             $('.aip-register-form').on('submit', this.handleRegister.bind(this));
             $('.aip-continue-guest').on('click', this.continueAsGuest.bind(this));
             
+            // Logout and account switching
+            $(document).on('click', '.aip-logout-btn', this.handleLogout.bind(this));
+            $(document).on('click', '.aip-switch-to-account-btn', this.switchToAccount.bind(this));
+            
             // Interface toggle
             $('.aip-toggle-chat').on('click', () => this.toggleInterface('chat'));
             $('.aip-toggle-form').on('click', () => this.toggleInterface('form'));
@@ -164,9 +168,38 @@
         
         handleLogin: function(e) {
             e.preventDefault();
-            // Use WordPress default login
             const form = $(e.currentTarget);
-            this.showNotification('Please use WordPress login page or continue as guest.');
+            const data = {
+                action: 'aip_login_user',
+                nonce: aipConfig.nonce,
+                email: form.find('[name="email"]').val(),
+                password: form.find('[name="password"]').val(),
+            };
+            
+            $.ajax({
+                url: aipConfig.ajax_url,
+                type: 'POST',
+                data: data,
+                beforeSend: () => this.showLoading(),
+                success: (response) => {
+                    this.hideLoading();
+                    if (response.success) {
+                        this.showMainContent();
+                        this.checkUserLimit();
+                        this.showNotification(response.data.message);
+                        // Reload page to update user state
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1000);
+                    } else {
+                        this.showNotification(response.data.message);
+                    }
+                },
+                error: () => {
+                    this.hideLoading();
+                    this.showNotification(aipConfig.texts.error);
+                }
+            });
         },
         
         handleRegister: function(e) {
@@ -207,6 +240,56 @@
             e.preventDefault();
             this.showMainContent();
             this.checkUserLimit();
+        },
+        
+        switchToAccount: function(e) {
+            e.preventDefault();
+            // Hide main content and show auth section
+            $('.aip-main-content').hide();
+            $('.aip-auth-section').show();
+            // Switch to login tab
+            $('.aip-auth-tab').removeClass('active');
+            $('.aip-auth-tab[data-tab="login"]').addClass('active');
+            $('.aip-auth-content').removeClass('active');
+            $('.aip-auth-content.login').addClass('active');
+        },
+        
+        handleLogout: function(e) {
+            e.preventDefault();
+            
+            if (!aipConfig.is_logged_in) {
+                return;
+            }
+            
+            this.showConfirm('Are you sure you want to logout?', (confirmed) => {
+                if (confirmed) {
+                    $.ajax({
+                        url: aipConfig.ajax_url,
+                        type: 'POST',
+                        data: {
+                            action: 'aip_logout_user',
+                            nonce: aipConfig.nonce
+                        },
+                        beforeSend: () => this.showLoading(),
+                        success: (response) => {
+                            this.hideLoading();
+                            if (response.success) {
+                                this.showNotification(response.data.message);
+                                // Reload page to update user state
+                                setTimeout(() => {
+                                    location.reload();
+                                }, 1000);
+                            } else {
+                                this.showNotification(response.data.message);
+                            }
+                        },
+                        error: () => {
+                            this.hideLoading();
+                            this.showNotification(aipConfig.texts.error);
+                        }
+                    });
+                }
+            });
         },
         
         showMainContent: function() {
@@ -327,17 +410,28 @@
             const destination = this.collectedData.destination || 
                                `${this.collectedData.region || ''}, ${this.collectedData.country || ''}`.trim().replace(/^,\s*/, '');
             
-            // Build preferences object
+            // Build preferences object with ALL required fields
             const preferences = {
                 budget: this.collectedData.budget,
-                interests: this.collectedData.interests,
+                interests: this.collectedData.interests || '',
                 pace: this.collectedData.pace,
-                travel_style: this.collectedData.travel_style
+                trip_type: this.collectedData.trip_type || this.collectedData.travel_style || ''
             };
+            
+            // Ensure all required fields are present before generating
+            if (!destination || !this.collectedData.days || !preferences.trip_type || 
+                !preferences.budget || !preferences.pace) {
+                alert('Please complete all trip details before generating the itinerary.');
+                return;
+            }
             
             const data = {
                 destination: destination,
                 days: this.collectedData.days || 3,
+                trip_type: preferences.trip_type,
+                budget: preferences.budget,
+                interests: preferences.interests,
+                pace: preferences.pace,
                 preferences: JSON.stringify(preferences),
                 type: type
             };
@@ -381,9 +475,20 @@
         handleFormSubmit: function(e) {
             e.preventDefault();
             const form = $(e.currentTarget);
+            
+            // Validate required fields
+            const destination = form.find('[name="destination"]').val();
+            const days = form.find('[name="days"]').val();
+            
+            if (!destination || !days) {
+                alert('Please fill in destination and number of days.');
+                return;
+            }
+            
+            // Note: Form interface may not collect all preferences, but backend will validate
             const data = {
-                destination: form.find('[name="destination"]').val(),
-                days: form.find('[name="days"]').val(),
+                destination: destination,
+                days: days,
                 start_date: form.find('[name="start_date"]').val(),
                 preferences: form.find('[name="preferences"]').val(),
                 type: form.find('[name="type"]').val(),
